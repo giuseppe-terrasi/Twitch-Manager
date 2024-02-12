@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+	<DebugSymbols>False</DebugSymbols>
+	<DebugType>Embedded</DebugType>
+	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	<OutputType>Exe</OutputType>
+	<DefaultItemExcludes>wwwroot/**</DefaultItemExcludes>
+    <UserSecretsId>3003dee8-9caa-4770-90f9-b78c482ce6ce</UserSecretsId>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="Always">
+			<LogicalName>
+				$(TargetName).%(FileName)%(Extension)
+			</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="obj\$(Configuration)\net8.0\scopedcss\bundle\$(ProjectName).styles.css" CopyToOutputDirectory="Always">
+			<LogicalName>$(TargetName).$(ProjectName).styles.css</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <PackageReference Include="AutoMapper" Version="13.0.1" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.1" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.1" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Folder Include="Models\Api\Clips\Requests\" />
+	  <Folder Include="Models\Api\Games\Requests\" />
+	</ItemGroup>
+	
+</Project>
