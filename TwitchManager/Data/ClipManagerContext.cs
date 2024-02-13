@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using System.Reflection;
 
@@ -7,8 +8,8 @@ using TwitchManager.Models.General;
 
 namespace TwitchManager.Data
 {
-    public class ClipManagerContext(ConfigData configData) 
-        : DbContext(new DbContextOptionsBuilder().UseSqlite(configData.DbConnectionString).Options)
+    public class ClipManagerContext(IOptionsMonitor<ConfigData> optionsMonitor) 
+        : DbContext(new DbContextOptionsBuilder().UseSqlite(optionsMonitor.CurrentValue.DbConnectionString).Options)
     {
         public DbSet<Clip> Clips { get; set; }
 

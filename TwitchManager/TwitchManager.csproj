@@ -35,10 +35,5 @@
 	  <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.1" />
 	</ItemGroup>
 
-
-	<ItemGroup>
-	  <Folder Include="Models\Api\Clips\Requests\" />
-	  <Folder Include="Models\Api\Games\Requests\" />
-	</ItemGroup>
 	
 </Project>

@@ -1,0 +1,38 @@
+﻿@page "/configure"
+
+@using TwitchManager.Auth.Attributes
+@using TwitchManager.Helpers
+@using TwitchManager.Models.General
+
+@inject IWritableOptions<ConfigData> WritableOptions
+@inject NavigationManager NavigationManager
+
+@attribute [AllowNotConfigured]
+
+@rendermode InteractiveServer
+
+<h3>Configure</h3>
+
+<input type="text" @bind=config/>
+
+<button @onclick="() => Save()">
+    Save
+</button>
+
+@code {
+
+    [SupplyParameterFromQuery]
+    public string ReturnUrl { get; set; }
+
+    private string config;   
+
+    private void Save()
+    {
+        WritableOptions.Update(o =>
+        {
+            o.DbConnectionString = config;
+        });
+
+        NavigationManager.NavigateTo(ReturnUrl ?? "/");
+    }
+}

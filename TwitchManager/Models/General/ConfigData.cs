@@ -9,5 +9,10 @@
         public string TokenUrl { get; set; }
 
         public string BaseUrl { get; set; }
+
+        public bool IsConfigured()
+        {
+            return !string.IsNullOrEmpty(DbConnectionString);
+        }
     }
 }

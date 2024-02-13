@@ -1,0 +1,13 @@
+﻿@inject NavigationManager NavigationManager
+
+@code {
+    protected override void OnInitialized()
+    {
+        var returnUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+
+        if (string.IsNullOrWhiteSpace(returnUrl))
+            NavigationManager.NavigateTo("/configure", true);
+        else
+            NavigationManager.NavigateTo($"/configure?returnUrl={returnUrl}", true);
+    }
+}

@@ -6,8 +6,10 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
+using TwitchManager.Auth;
 using TwitchManager.Components;
 using TwitchManager.Data;
+using TwitchManager.Helpers;
 using TwitchManager.Models.General;
 using TwitchManager.Services.Abstractions;
 using TwitchManager.Services.Implementations;
@@ -20,13 +22,14 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
-var config = builder.Configuration.GetSection("Config").Get<ConfigData>();
+builder.Services.ConfigureWritable<ConfigData>(
+    builder.Configuration.GetSection("Config"));
 
-builder.Services.AddSingleton(config);
 builder.Services.AddScoped<IClipService, ClipService>();
 
 builder.Services.AddDbContextFactory<ClipManagerContext>();
 
+builder.Services.AddTwitchManagerAuth();
 
 var app = builder.Build();
 
@@ -45,6 +48,9 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = provider,
     RequestPath = "",
 });
+
+app.UseTwitchManagerAuth();
+
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
