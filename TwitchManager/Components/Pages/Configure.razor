@@ -1,36 +1,120 @@
 ﻿@page "/configure"
 
 @using TwitchManager.Auth.Attributes
+@using TwitchManager.Components.Abstractions
 @using TwitchManager.Helpers
 @using TwitchManager.Models.General
 
 @inject IWritableOptions<ConfigData> WritableOptions
-@inject NavigationManager NavigationManager
+
+@inherits BaseComponent
 
 @attribute [AllowNotConfigured]
 
 @rendermode InteractiveServer
 
-<h3>Configure</h3>
+<h3>
+    @Localizer["ConfigureTitle"]
+</h3>
 
-<input type="text" @bind=config/>
+<div class="row">
+    <div class="col-6 offset-3">
+        <RadzenTemplateForm TItem="ConfigData" Submit="() => Save()" Data="_model">
+            <div class="row">
+                <div class="col-12">
+                    <CultureSelector />
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <RadzenLabel>
+                        @Localizer["DbConnectionString"]
+                    </RadzenLabel>
+                    <RadzenTextArea @bind-Value="_model.FilePath" class="form-control" Name="DbConnectionString" />
+                    <RadzenCustomValidator Component="DbConnectionString" Text="@Localizer["NotDirectoryError"]" Validator="() => !System.IO.Directory.Exists(_model.FilePath)" />
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <RadzenLabel>
+                        @Localizer["ClientId"]
+                    </RadzenLabel>
+                    <RadzenTextBox @bind-Value="_model.ClientId" class="form-control" />
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <RadzenLabel>
+                        @Localizer["ClientSecret"]
+                    </RadzenLabel>
+                    <RadzenTextBox @bind-Value="_model.ClientSecret" class="form-control" />
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <RadzenLabel>
+                        @Localizer["BaseUrl"]
+                    </RadzenLabel>
+                    <RadzenTextBox @bind-Value="_model.BaseUrl" class="form-control" />
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <RadzenLabel>
+                        @Localizer["TokenUrl"]
+                    </RadzenLabel>
+                    <RadzenTextBox @bind-Value="_model.TokenUrl" class="form-control" />
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                        @Localizer["SaveLabel"]
+                    </button>
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </div>
+</div>
 
-<button @onclick="() => Save()">
-    Save
-</button>
+
+
+
+
 
 @code {
 
     [SupplyParameterFromQuery]
     public string ReturnUrl { get; set; }
 
-    private string config;   
+    private ConfigData _model = new();
+
+    protected override void OnInitialized()
+    {
+
+        @if (!string.IsNullOrEmpty(WritableOptions.Value.DbConnectionString))
+        {
+            _model.DbConnectionString = WritableOptions.Value.DbConnectionString;
+            _model.ClientId = WritableOptions.Value.ClientId;
+            _model.ClientSecret = WritableOptions.Value.ClientSecret;
+            _model.BaseUrl = WritableOptions.Value.BaseUrl;
+            _model.TokenUrl = WritableOptions.Value.TokenUrl;
+        }
+        else
+        {
+            _model.DbConnectionString = new System.IO.FileInfo(System.Reflection.Assembly.GetEntryAssembly().Location).Directory.FullName;
+        }
+    }
 
     private void Save()
     {
         WritableOptions.Update(o =>
         {
-            o.DbConnectionString = config;
+            o.DbConnectionString = _model.DbConnectionString;
+            o.ClientId = _model.ClientId;
+            o.ClientSecret = _model.ClientSecret;
+            o.BaseUrl = _model.BaseUrl;
+            o.TokenUrl = _model.TokenUrl;
         });
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/");

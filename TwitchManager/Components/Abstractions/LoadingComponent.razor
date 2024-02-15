@@ -1,0 +1,61 @@
+﻿@using System.Collections.Concurrent
+
+@if (_isLoading)
+{
+    <div class="w-100 spinner">
+    </div>
+    <div class="spinner-border" role="status">
+        <span class="sr-only"></span>
+    </div>
+}
+
+@Body
+
+
+@code {
+
+    private protected virtual RenderFragment Body => null;
+
+    private bool _isLoading;
+
+    private ConcurrentStack<bool> _loadingStack = new();
+
+    private bool _showPopup;
+    private bool _errorPopup;
+    private string _popupMessage;
+
+    protected async Task SetLoadingAsync(bool isLoading)
+    {
+        if (isLoading)
+        {
+            _loadingStack.Push(isLoading);
+        }
+        else
+        {
+            _loadingStack.TryPop(out var result);
+        }
+
+        _isLoading = _loadingStack.Any();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected async Task ShowPopupAsync(bool isError, string message)
+    {
+        _errorPopup = isError;
+        _popupMessage = message;
+        _showPopup = true;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected Task ShowSuccessPopupAsync(string message)
+    {
+        return ShowPopupAsync(false, message);
+    }
+
+    protected Task ShowErrorPopupAsync(string message)
+    {
+        return ShowPopupAsync(true, message);
+    }
+}

@@ -1,0 +1,73 @@
+﻿@page "/"
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Models.Clips
+@using TwitchManager.Services.Abstractions
+
+@inject IClipService ClipService
+@inject IJSRuntime JSRuntime
+
+@rendermode InteractiveServer
+
+@inherits BaseComponent
+
+<PageTitle>Clips</PageTitle>
+
+<h1>
+    Elenco clip
+</h1>
+
+
+<div class="row">
+    <div class="col-12 table-responsive">
+        <RadzenDataGrid Data="@clips" TItem="ClipModel" PagerPosition="PagerPosition.Bottom" AllowPaging="true" AllowSorting="true" PageSize="50" AllowFiltering=true @ref=grid
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+            <HeaderTemplate>
+                Totali: <b>@clips.Count</b>
+                Filtrati: <b>@grid.View.Count()</b>
+            </HeaderTemplate>
+            <Columns>
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.Id))" Title="Id" Filterable=false Reorderable=false/>
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.CreatedAt))" Title="Creata il" />
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.Title))" Title="Titolo" />
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.ViewCount))" Title="Visualizzazioni" />
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.GameName))" Title="Gioco" />
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.CreatorName))" Title="Creata da" />
+                <RadzenDataGridColumn TItem="ClipModel" Title="Azioni" Context="clip">
+                    <Template>
+                        <a href="@clip.Url" target="_blank">Apri</a>
+                        <button type="button" class="btn btn-primary" @onclick="async () => await DownloadAsync(clip.Url)">
+                            Download
+                        </button>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+</div>
+@code {
+
+    private List<ClipModel> clips = new List<ClipModel>();
+
+    RadzenDataGrid<ClipModel> grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ExecuteAsync(async () =>
+        {
+            clips = await ClipService.GetAllAsync();
+        });
+    }
+
+    private async Task DownloadAsync(string url)
+    {
+        await ExecuteAsync(async () =>
+        {
+            var downloadLink = await ClipService.GetDownloadLinkAsync(url);
+
+            if(!string.IsNullOrEmpty(downloadLink))
+            {
+                await JSRuntime.InvokeVoidAsync("openUrl", downloadLink);
+            }
+        });
+    }
+}

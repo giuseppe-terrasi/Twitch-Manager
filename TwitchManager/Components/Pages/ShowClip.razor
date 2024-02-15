@@ -1,0 +1,55 @@
+﻿@page "/show-clip/{id}"
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Services.Abstractions
+
+@inherits BaseComponent
+@inject IClipService ClipService
+
+@inject IJSRuntime JSRuntime
+
+@rendermode InteractiveServer
+
+<h3>ShowClip</h3>
+
+<style>
+    iframe {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        z-index: 999999;
+    }
+</style>
+
+<iframe src="@(url+"&parent=localhost&autoplay=true&muted=false")" allowfullscreen>
+</iframe>
+
+@code {
+
+    [Parameter]
+    public string Id { get; set; }
+
+    string url = "";
+    bool show = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ExecuteAsync(async () =>
+        {
+            var clip = await ClipService.GetByIdAsync(Id);
+            if (clip != null)
+            {
+                url = clip.EmbedUrl;
+                show = true;
+            }
+        });
+    }
+}

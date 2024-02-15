@@ -1,4 +1,6 @@
-﻿namespace TwitchManager.Models.General
+﻿using System.Text.Json.Serialization;
+
+namespace TwitchManager.Models.General
 {
     public class ConfigData
     {
@@ -6,13 +8,36 @@
 
         public string ClientId { get; set; }
 
+        public string ClientSecret { get; set; }
+
         public string TokenUrl { get; set; }
 
         public string BaseUrl { get; set; }
 
-        public bool IsConfigured()
-        {
-            return !string.IsNullOrEmpty(DbConnectionString);
+        [JsonIgnore]
+        public string FilePath { 
+            get
+            {
+                if(string.IsNullOrEmpty(DbConnectionString))
+                {
+                    return "";
+                }
+                else if(DbConnectionString.Contains("Data Source="))
+                {
+                    return DbConnectionString.Replace("Data Source=", "");
+                }
+                else
+                {
+                    return DbConnectionString;
+                }
+            }
+            set
+            {
+                DbConnectionString = $"Data Source={value}";
+            }
         }
+
+        public bool IsConfigured() =>
+            !string.IsNullOrEmpty(DbConnectionString) && !string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret) && !string.IsNullOrEmpty(TokenUrl) && !string.IsNullOrEmpty(BaseUrl);
     }
 }
