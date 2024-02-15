@@ -31,6 +31,10 @@ builder.Services.AddDbContextFactory<ClipManagerContext>();
 
 builder.Services.AddTwitchManagerAuth();
 
+builder.Services.AddLocalization(options => options.ResourcesPath = "");
+
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -42,16 +46,38 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseHttpsRedirection();
 
-var provider = new EmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program)));
-app.UseStaticFiles(new StaticFileOptions
+var supportedCultures = new[]
 {
-    FileProvider = provider,
-    RequestPath = "",
-});
+    "it-IT",
+    "en-US"
+};
+
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
+
+if(app.Environment.IsDevelopment())
+{
+    app.UseStaticFiles();
+}
+else
+{
+    var provider = new EmbeddedFileProvider(Assembly.GetAssembly(type: typeof(Program)));
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = provider,
+        RequestPath = "",
+    });
+}
 
 app.UseTwitchManagerAuth();
 
 app.UseAntiforgery();
+
+app.MapControllers();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

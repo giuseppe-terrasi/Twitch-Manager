@@ -1,0 +1,47 @@
+﻿@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using TwitchManager.Translations
+@inject NavigationManager Navigation
+@inject IStringLocalizer<Translation> Localizer
+
+<label>
+    @Localizer["SelectLanguageLabel"]:
+</label>
+<RadzenDropDown TValue="CultureInfo" @bind-Value="Culture" class="form-control" Data="supportedCultures">
+    <Template>
+        @(((CultureInfo)context).DisplayName)
+    </Template>
+</RadzenDropDown>
+
+@code
+{
+    private CultureInfo[] supportedCultures = new[]
+    {
+        new CultureInfo("it-IT"),
+        new CultureInfo("en-US"),
+    };
+
+    protected override void OnInitialized()
+    {
+        Culture = CultureInfo.CurrentCulture;
+    }
+
+    private CultureInfo Culture
+    {
+        get => CultureInfo.CurrentCulture;
+        set
+        {
+            if (CultureInfo.CurrentCulture != value)
+            {
+                var uri = new Uri(Navigation.Uri)
+                    .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+                var cultureEscaped = Uri.EscapeDataString(value.Name);
+                var uriEscaped = Uri.EscapeDataString(uri);
+
+                Navigation.NavigateTo(
+                    $"Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}",
+                    forceLoad: true);
+            }
+        }
+    }
+}
