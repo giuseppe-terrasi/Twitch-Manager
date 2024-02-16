@@ -8,17 +8,22 @@ using TwitchManager.Models.General;
 
 namespace TwitchManager.Data
 {
-    public class ClipManagerContext(IOptionsMonitor<ConfigData> optionsMonitor) 
-        : DbContext(new DbContextOptionsBuilder().UseSqlite(optionsMonitor.CurrentValue.DbConnectionString).Options)
+    public class TwitchManagerDbContext(IOptionsMonitor<ConfigData> optionsMonitor) 
+        : DbContext()
     {
         public DbSet<Clip> Clips { get; set; }
 
         public DbSet<Game> Games { get; set; }
 
+        public DbSet<Streamer> Streamers { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
+            optionsBuilder
+                .UseSqlite(optionsMonitor.CurrentValue.DbConnectionString)
+                .LogTo(Console.WriteLine, LogLevel.Information)
+                .EnableSensitiveDataLogging(true);
             //SQLitePCL.Batteries.Init();
         }
 

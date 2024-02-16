@@ -1,0 +1,71 @@
+﻿@using TwitchManager.Components.Abstractions
+@using TwitchManager.Models.Api.Clips.Data
+@using TwitchManager.Models.Streamers
+@using TwitchManager.Services.Abstractions
+
+@inherits BaseComponent
+
+@inject IStreamerService StreamerService
+
+<div class="row">
+    <div class="col-12 text-center">
+        <RadzenLabel>
+            Nome utente
+        </RadzenLabel>
+        <RadzenTextBox @bind-Value="username" class="form-control" />
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="row mt-3">
+        <div class="col-12 text-center">
+            @message
+        </div>
+    </div>
+}
+
+<div class="row mt-3">
+    <div class="col-12 grid-2-items">
+        <button class="btn btn-secondary" @onclick="() => Close()">
+            @Localizer["CancelLabel"]
+        </button>
+        <button class="btn btn-primary" @onclick="async () => await SearchAsync()">
+            @Localizer["SearchLabel"]
+        </button>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public DialogService DialogService { get; set; }
+
+    private string username;
+    private string message;
+    private StreamerDataModel streamer;
+
+    private void Close()
+    {
+        DialogService.Close(streamer);
+    }
+
+    private async Task SearchAsync()
+    {
+        await ExecuteAsync(async () =>
+        {
+            streamer = await StreamerService.GetStreamerFromTwitchAsync(username);
+        });
+
+        if (streamer == null || string.IsNullOrEmpty(streamer.Id))
+        {
+            streamer = null;
+            message = Localizer["UserNotFoundMessage"];
+        }
+        else
+        {
+            Close();
+        }
+    }
+
+}

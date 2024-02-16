@@ -1,0 +1,115 @@
+﻿@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using TwitchManager.Models.Clips
+@using TwitchManager.Models.General
+@using TwitchManager.Services.Abstractions
+@using TwitchManager.Translations
+
+@inject IClipService ClipService
+
+@inject IStringLocalizer<Translation> Localizer
+
+@inject IOptionsMonitor<ConfigData> OptionsMonitor
+
+
+<div class="row">
+    <div class="col-12">
+        <div class="download-statistics">
+            <span class="text-start">@Localizer["TotalDownloadClipsLabel"]: @Clips.Count</span>
+            <span class="text-start">@Localizer["RemainingDownloadClipsLabel"]: @remainingClips</span>
+            <span class="text-start">@Localizer["ErrorsLabel"]: @errors</span>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(current))
+{
+    <div class="row">
+        <div class="col-12">
+            <span>@Localizer["CurrentClipLabel"]: @current</span>
+        </div>
+    </div>
+}
+
+<div class="row mt-3">
+    <div class="col-12">
+
+        <RadzenProgressBar ProgressBarStyle="ProgressBarStyle.Primary" @bind-Value="@percentage" ShowValue="false" />
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12 grid-2-items">
+        <button class="btn btn-secondary" @onclick="() => Cancel()">
+            @Localizer["CancelLabel"]
+        </button>
+        <button class="btn btn-primary" disabled="@(remainingClips > 0)" @onclick="() => DialogService.Close()">
+            @Localizer["CloseLabel"]
+        </button>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public DialogService DialogService { get; set; }
+
+    [Parameter]
+    public IList<ClipModel> Clips { get; set; }
+
+    private int remainingClips = 0;
+    private int errors = 0;
+    private double percentage = 0;
+    private string current = "";
+
+    CancellationTokenSource cancellationTokenSource = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        remainingClips = Clips.Count;
+
+        foreach (var clip in Clips)
+        {
+            current = clip.Title;
+
+            await InvokeAsync(StateHasChanged);
+
+            try
+            {
+                var downloadLink = await ClipService.GetDownloadLinkAsync(clip.Url, cancellationTokenSource.Token);
+
+                if (!string.IsNullOrEmpty(downloadLink))
+                {
+                    var httpClient = new HttpClient();
+                    var response = await httpClient.GetAsync(downloadLink, cancellationTokenSource.Token);
+                    using (var fs = new FileStream(Path.Combine(OptionsMonitor.CurrentValue.ClipDownloadPath,$"{clip.Id}.mp4"), FileMode.Create))
+                    {
+                        await response.Content.CopyToAsync(fs, cancellationTokenSource.Token);
+                    }
+                }
+            }
+            catch
+            {
+                errors++;
+            }
+            finally
+            {
+                remainingClips--;
+            }
+
+            percentage = 100 - ((double)remainingClips / (double)Clips.Count * 100);
+
+            await InvokeAsync(StateHasChanged);
+        }
+
+        current = "";
+
+        ClipService.DisposeChromeDriver();
+    }
+
+    private void Cancel()
+    {
+        cancellationTokenSource.Cancel();
+        DialogService.Close();
+    }
+}

@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
+
+using Radzen;
 
 using System.Diagnostics;
 using System.Reflection;
@@ -8,6 +11,7 @@ using System.Runtime.InteropServices;
 
 using TwitchManager.Auth;
 using TwitchManager.Components;
+using TwitchManager.Comunications.TwicthApi;
 using TwitchManager.Data;
 using TwitchManager.Helpers;
 using TwitchManager.Models.General;
@@ -25,9 +29,17 @@ builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.ConfigureWritable<ConfigData>(
     builder.Configuration.GetSection("Config"));
 
-builder.Services.AddScoped<IClipService, ClipService>();
+builder.Services.AddRadzenComponents();
 
-builder.Services.AddDbContextFactory<ClipManagerContext>();
+builder.Services.AddScoped<DialogService>();
+builder.Services.AddScoped<IStreamerService, StreamerService>();
+builder.Services.AddScoped<IClipService, ClipService>();
+builder.Services.AddHttpClient("TwitchApi")
+    .ConfigureHttpClient((s, c) => c.BaseAddress = new Uri(s.GetRequiredService<IOptionsMonitor<ConfigData>>().CurrentValue.BaseUrl))
+    .ConfigurePrimaryHttpMessageHandler((s) => new TwitchApiHttpClientHandler(s.GetRequiredService<IWritableOptions<ConfigData>>()));
+
+
+builder.Services.AddDbContextFactory<TwitchManagerDbContext>();
 
 builder.Services.AddTwitchManagerAuth();
 
@@ -101,7 +113,7 @@ app.Lifetime.ApplicationStarted.Register(() =>
     }
 });
 
-app.MapPost("/close", () => { 
+app.MapGet("/shutdown", () => { 
     app.StopAsync().ConfigureAwait(false);
 });
 

@@ -24,5 +24,7 @@
         public bool IsFeatured { get; set; }
 
         public virtual Game Game { get; set; }
+
+        public virtual Streamer Streamer { get; set; }
     }
 }

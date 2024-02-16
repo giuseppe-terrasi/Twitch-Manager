@@ -6,7 +6,7 @@ namespace TwitchManager.Auth.Attributes
     {
         public AuthorizeConfiguredAttribute()
         {
-            Policy = "Configured";
+            Policy = TwitchManagerAuthenticationOptions.ConfiguredPolicy;
         }
     }
 }

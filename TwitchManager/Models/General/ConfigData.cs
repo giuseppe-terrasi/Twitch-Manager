@@ -14,6 +14,12 @@ namespace TwitchManager.Models.General
 
         public string BaseUrl { get; set; }
 
+        public string Token { get; set; }
+
+        public DateTime? TokenExpiration { get; set; }
+
+        public string ClipDownloadPath { get; set; }
+
         [JsonIgnore]
         public string FilePath { 
             get
@@ -38,6 +44,7 @@ namespace TwitchManager.Models.General
         }
 
         public bool IsConfigured() =>
-            !string.IsNullOrEmpty(DbConnectionString) && !string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret) && !string.IsNullOrEmpty(TokenUrl) && !string.IsNullOrEmpty(BaseUrl);
+            !string.IsNullOrEmpty(DbConnectionString) && !string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret) && !string.IsNullOrEmpty(TokenUrl) && !string.IsNullOrEmpty(BaseUrl)
+            && !string.IsNullOrEmpty(ClipDownloadPath);
     }
 }

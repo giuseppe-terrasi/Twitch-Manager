@@ -4,10 +4,18 @@ namespace TwitchManager.Services.Abstractions
 {
     public interface IClipService
     {
-        Task<List<ClipModel>> GetAllAsync();
+        Task<IEnumerable<ClipModel>> GetAllAsync();
 
-        Task<string> GetDownloadLinkAsync(string clipUrl);
+        Task<IEnumerable<ClipModel>> GetByStreamerAsync(string streamerId);
+
+        Task<string> GetDownloadLinkAsync(string clipUrl, CancellationToken cancellationToken);
 
         Task<ClipModel> GetByIdAsync(string id);
+
+        Task GetFromApiAsync(string streamerId);
+
+        void CreateChromeDriver();
+
+        void DisposeChromeDriver();
     }
 }

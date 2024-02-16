@@ -16,11 +16,16 @@
 	<ItemGroup>
 		<EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="Always">
 			<LogicalName>
-				$(TargetName).%(FileName)%(Extension)
+				$(TargetName).$([System.String]::new('%(RecursiveDir)').Replace('\','.'))%(FileName)%(Extension)
 			</LogicalName>
 		</EmbeddedResource>
 		<EmbeddedResource Include="obj\$(Configuration)\net8.0\scopedcss\bundle\$(ProjectName).styles.css" CopyToOutputDirectory="Always">
 			<LogicalName>$(TargetName).$(ProjectName).styles.css</LogicalName>
+		</EmbeddedResource>
+		<EmbeddedResource Include="bin\$(Configuration)\net8.0\publish\wwwroot\_content\**" CopyToOutputDirectory="Always">
+			<LogicalName>
+				$(TargetName)._content.$([System.String]::new('%(RecursiveDir)').Replace('\','.'))%(FileName)%(Extension)
+			</LogicalName>
 		</EmbeddedResource>
 	</ItemGroup>
 

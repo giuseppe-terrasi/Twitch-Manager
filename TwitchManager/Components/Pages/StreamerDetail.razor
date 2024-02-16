@@ -1,0 +1,73 @@
+﻿@page "/streamer/{id}"
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Models.Streamers
+@using TwitchManager.Services.Abstractions
+
+@inject IStreamerService StreamerService
+
+@inherits BaseComponent
+
+<PageTitle>
+    @Localizer["StreamerDetailsPageTitle"]
+</PageTitle>
+
+<a href="/streamers" class="d-flex align-items-center text-decoration-none text-black">
+    <i class="ph ph-arrow-left grid-icon me-2"></i> Indietro
+</a>
+
+<h1 class="page-title">
+    @Localizer["StreamerDetailsPageTitle"]
+</h1>
+
+<div class="row">
+    <div class="col-6">
+        <RadzenLabel>
+            Id
+        </RadzenLabel>
+        <RadzenTextBox @bind-Value="_model.Id" class="form-control" Disabled=true/>
+    </div>
+    <div class="col-6">
+        <RadzenLabel>
+            Username
+        </RadzenLabel>
+        <RadzenTextBox @bind-Value="_model.Login" class="form-control" Disabled=true />
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-6">
+        <RadzenLabel>
+            @Localizer["DisplayNameLabel"]
+        </RadzenLabel>
+        <RadzenTextBox @bind-Value="_model.DisplayName" class="form-control" Disabled=true />
+    </div>
+    <div class="col-6">
+        <RadzenLabel>
+            @Localizer["BroadcasterTypeLabel"]
+        </RadzenLabel>
+        <RadzenTextBox @bind-Value="_model.BroadcasterType" class="form-control" Disabled=true />
+    </div>
+</div>
+
+
+<div class="row mt-3">
+    <div class="col-12">
+        <RadzenLabel>
+            @Localizer["DescriptionLabel"]
+        </RadzenLabel>
+        <RadzenTextBox @bind-Value="_model.Description" class="form-control" Disabled=true />
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public string Id { get; set; }
+
+    private StreamerModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await StreamerService.GetByIdAsync(Id);
+    }
+}

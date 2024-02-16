@@ -1,11 +1,14 @@
-﻿@page "/configure"
+﻿@page "/settings"
 
+@using Microsoft.EntityFrameworkCore
 @using TwitchManager.Auth.Attributes
 @using TwitchManager.Components.Abstractions
+@using TwitchManager.Data
 @using TwitchManager.Helpers
 @using TwitchManager.Models.General
 
 @inject IWritableOptions<ConfigData> WritableOptions
+@inject IDbContextFactory<TwitchManagerDbContext> DbContextFactory
 
 @inherits BaseComponent
 
@@ -13,13 +16,14 @@
 
 @rendermode InteractiveServerNotPrerendered
 
-<h3>
+
+<h1 class="page-title">
     @Localizer["ConfigureTitle"]
-</h3>
+</h1>
 
 <div class="row">
-    <div class="col-6 offset-3">
-        <RadzenTemplateForm TItem="ConfigData" Submit="() => Save()" Data="_model">
+    <div class="col-12">
+        <RadzenTemplateForm TItem="ConfigData" Submit="async () => await SaveAsync()" Data="_model">
             <div class="row">
                 <div class="col-12">
                     <CultureSelector />
@@ -32,6 +36,7 @@
                     </RadzenLabel>
                     <RadzenTextArea @bind-Value="_model.FilePath" class="form-control" Name="DbConnectionString" />
                     <RadzenCustomValidator Component="DbConnectionString" Text="@Localizer["NotDirectoryError"]" Validator="() => !System.IO.Directory.Exists(_model.FilePath)" />
+                    <RadzenCustomValidator Component="DbConnectionString" Text="@string.Format(Localizer["InvalidDbFileExtesion"], Path.GetExtension(_model.FilePath))" Validator="@(() => Path.GetExtension(_model.FilePath) == ".db")" />
                 </div>
             </div>
             <div class="row mt-3">
@@ -67,6 +72,14 @@
                 </div>
             </div>
             <div class="row mt-3">
+                <div class="col-12">
+                    <RadzenLabel>
+                        @Localizer["ClipDownloadPathLabel"]
+                    </RadzenLabel>
+                    <RadzenTextBox @bind-Value="_model.ClipDownloadPath" class="form-control" />
+                </div>
+            </div>
+            <div class="row mt-3">
                 <div class="col-12 d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary">
                         @Localizer["SaveLabel"]
@@ -99,6 +112,7 @@
             _model.ClientSecret = WritableOptions.Value.ClientSecret;
             _model.BaseUrl = WritableOptions.Value.BaseUrl;
             _model.TokenUrl = WritableOptions.Value.TokenUrl;
+            _model.ClipDownloadPath = WritableOptions.Value.ClipDownloadPath;
         }
         else
         {
@@ -106,7 +120,7 @@
         }
     }
 
-    private void Save()
+    private async Task SaveAsync()
     {
         WritableOptions.Update(o =>
         {
@@ -115,7 +129,14 @@
             o.ClientSecret = _model.ClientSecret;
             o.BaseUrl = _model.BaseUrl;
             o.TokenUrl = _model.TokenUrl;
+            o.ClipDownloadPath = _model.ClipDownloadPath;
         });
+
+        if(!File.Exists(_model.FilePath))
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            await context.Database.EnsureCreatedAsync();
+        }
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/");
     }

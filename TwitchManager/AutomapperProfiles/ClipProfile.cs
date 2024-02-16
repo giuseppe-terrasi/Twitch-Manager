@@ -10,9 +10,14 @@ namespace TwitchManager.AutomapperProfiles
         public ClipProfile()
         {
             CreateMap<ClipDataModel, Data.Domains.Clip>()
+                .ForMember(c => c.Game, opt => opt.Ignore())
+                .ForMember(c => c.Streamer, opt => opt.Ignore())
                 .ReverseMap();
+
             CreateMap<GameDataModel, Data.Domains.Game>()
+                .ForMember(g => g.Clips, opt => opt.Ignore())
                 .ReverseMap();
+
             CreateMap<ClipModel, Data.Domains.Clip>()
                 .ReverseMap()
                 .ForMember(c => c.GameName, opt => opt.MapFrom(c => c.Game.Name));

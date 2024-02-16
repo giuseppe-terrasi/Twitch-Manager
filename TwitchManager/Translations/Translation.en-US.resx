@@ -117,28 +117,124 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ActionsLabel" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="AddFromTwitchLabel" xml:space="preserve">
+    <value>Add from Twitch</value>
+  </data>
   <data name="BaseUrl" xml:space="preserve">
     <value>Base API URL</value>
   </data>
+  <data name="BroadcasterTypeLabel" xml:space="preserve">
+    <value>Broadcaster type</value>
+  </data>
+  <data name="CancelLabel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ClipDownloadPathLabel" xml:space="preserve">
+    <value>Clip download path</value>
+  </data>
+  <data name="ClipPageTitle" xml:space="preserve">
+    <value>Clips</value>
+  </data>
+  <data name="CloseLabel" xml:space="preserve">
+    <value>Close</value>
+  </data>
   <data name="ConfigureTitle" xml:space="preserve">
-    <value>Configuration</value>
+    <value>Settings</value>
+  </data>
+  <data name="CreatorNameLabel" xml:space="preserve">
+    <value>Creator</value>
+  </data>
+  <data name="CurrentClipLabel" xml:space="preserve">
+    <value>Current clip</value>
   </data>
   <data name="DbConnectionString" xml:space="preserve">
-    <value>Data file path</value>
+    <value>Data file path (.db extension)</value>
+  </data>
+  <data name="DescriptionLabel" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="DisplayNameLabel" xml:space="preserve">
+    <value>Display name</value>
+  </data>
+  <data name="DownloadSelectedLabel" xml:space="preserve">
+    <value>Download selected</value>
+  </data>
+  <data name="DownloadSelectedTitle" xml:space="preserve">
+    <value>Download selected</value>
+  </data>
+  <data name="ErrorsLabel" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="FilteredLabel" xml:space="preserve">
+    <value>Filtered</value>
+  </data>
+  <data name="GameNameLabel" xml:space="preserve">
+    <value>Game</value>
   </data>
   <data name="GenericErrorMessage" xml:space="preserve">
     <value>An error occurred</value>
   </data>
+  <data name="ImageLabel" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="InvalidDbFileExtesion" xml:space="preserve">
+    <value>Invalid {0} extension. Data file must have .db extension</value>
+  </data>
+  <data name="NoStreamerImportedLabel" xml:space="preserve">
+    <value>No streamer imported</value>
+  </data>
   <data name="NotDirectoryError" xml:space="preserve">
     <value>Invalid file name</value>
+  </data>
+  <data name="RemainingDownloadClipsLabel" xml:space="preserve">
+    <value>Remaining clips</value>
   </data>
   <data name="SaveLabel" xml:space="preserve">
     <value>Save</value>
   </data>
+  <data name="SearchLabel" xml:space="preserve">
+    <value>Search</value>
+  </data>
   <data name="SelectLanguageLabel" xml:space="preserve">
     <value>Select your locale</value>
   </data>
+  <data name="SettingsLabel" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ShutdownLabel" xml:space="preserve">
+    <value>Shutdown</value>
+  </data>
+  <data name="StreamerDetailsPageTitle" xml:space="preserve">
+    <value>Streamer detail</value>
+  </data>
+  <data name="StreamerLabel" xml:space="preserve">
+    <value>Streamer</value>
+  </data>
+  <data name="StreamersPageTitle" xml:space="preserve">
+    <value>Streamers</value>
+  </data>
+  <data name="SyncLabel" xml:space="preserve">
+    <value>Syncronize</value>
+  </data>
+  <data name="TitleLabel" xml:space="preserve">
+    <value>Title</value>
+  </data>
   <data name="TokenUrl" xml:space="preserve">
     <value>Base API Authorization Token URL</value>
+  </data>
+  <data name="TotalDownloadClipsLabel" xml:space="preserve">
+    <value>Total clips</value>
+  </data>
+  <data name="TotalsLabel" xml:space="preserve">
+    <value>Totals</value>
+  </data>
+  <data name="UserNotFoundMessage" xml:space="preserve">
+    <value>User not found</value>
+  </data>
+  <data name="ViewCountLabel" xml:space="preserve">
+    <value>View count</value>
   </data>
 </root>

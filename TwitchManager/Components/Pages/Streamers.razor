@@ -1,0 +1,93 @@
+﻿@page "/streamers"
+
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Components.Popups
+@using TwitchManager.Models.Clips
+@using TwitchManager.Models.Streamers
+@using TwitchManager.Services.Abstractions
+
+@inject IStreamerService StreamerService
+@inject IJSRuntime JSRuntime
+@inject DialogService DialogService
+
+@rendermode InteractiveServerNotPrerendered
+
+@inherits BaseComponent
+
+<PageTitle>
+    @Localizer["StreamersPageTitle"]
+</PageTitle>
+
+<div class="row page-title">
+    <div class="col-8">
+        <h1>
+            @Localizer["StreamersPageTitle"]
+        </h1>
+    </div>
+    <div class="col-4 d-flex justify-content-end">
+        <button class="btn btn-primary d-flex justify-content-center align-items-center" @onclick="async () => await AddFromTwitchAsync()">
+            @Localizer["AddFromTwitchLabel"] <i class="ph ph-twitch-logo ms-3"></i>
+        </button>
+    </div>
+</div>
+
+
+<div class="row mt-3">
+    <div class="col-12 table-responsive">
+        <RadzenDataGrid Data="@streamers" TItem="StreamerModel" PagerPosition="PagerPosition.Bottom" AllowPaging="true" AllowSorting="true" PageSize="10" AllowFiltering=true @ref=grid
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+            <HeaderTemplate>
+                @Localizer["TotalsLabel"]: <b>@streamers.Count()</b>
+                @Localizer["FilteredLabel"]: <b>@grid.View.Count()</b>
+            </HeaderTemplate>
+            <Columns>
+                <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.Id))" Title="Id" Filterable=false Reorderable=false Sortable=false />
+                <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.Id))" Title="@Localizer["ImageLabel"]" Filterable=false Reorderable=false Sortable=false>
+                    <Template>
+                        <img src="@context.ProfileImageUrl" alt="@context.DisplayName" style="width: 50px; height: 50px; border-radius: 50%;" />
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.Login))" Title="Username" />
+                <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.DisplayName))" Title="@Localizer["DisplayNameLabel"]" />
+                <RadzenDataGridColumn TItem="StreamerModel" Title="@Localizer["ActionsLabel"]" Context="streamer" Filterable=false Reorderable=false Sortable=false TextAlign="TextAlign.Center">
+                    <Template>
+                        <a href="/streamer/@streamer.Id" class="text-decoration-none text-black">
+                            <i class="ph ph-note-pencil grid-icon"></i>
+                        </a>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+</div>
+@code {
+
+    private IEnumerable<StreamerModel> streamers = new List<StreamerModel>();
+
+    RadzenDataGrid<StreamerModel> grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ExecuteAsync(async () =>
+        {
+            streamers = await StreamerService.GetAllAsync();
+        });
+    }
+
+    private async Task AddFromTwitchAsync()
+    {
+        var toAdd = await DialogService.OpenAsync<AddFromTwitchPopup>("Aggiungi Streamer da Twitch", new Dictionary<string, object>()
+        {
+            { "DialogService", DialogService }
+        });
+
+        if (toAdd != null)
+        {
+            await ExecuteAsync(async () =>
+            {
+                await StreamerService.AddAsync(toAdd);
+                streamers = await StreamerService.GetAllAsync();
+            });
+        }
+    }
+}

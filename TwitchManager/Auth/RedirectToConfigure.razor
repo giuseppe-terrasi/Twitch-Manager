@@ -6,8 +6,8 @@
         var returnUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
 
         if (string.IsNullOrWhiteSpace(returnUrl))
-            NavigationManager.NavigateTo("/configure", true);
+            NavigationManager.NavigateTo("/settings", true);
         else
-            NavigationManager.NavigateTo($"/configure?returnUrl={returnUrl}", true);
+            NavigationManager.NavigateTo($"/settings?returnUrl={returnUrl}", true);
     }
 }

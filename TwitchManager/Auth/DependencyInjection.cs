@@ -16,7 +16,7 @@ namespace TwitchManager.Auth
             .AddScheme<TwitchManagerAuthenticationOptions, TwitchManagerAuthenticationHandler>(TwitchManagerAuthenticationOptions.AuthenticationScheme, null);
 
             services.AddAuthorizationBuilder()
-                .AddPolicy("Configured", policy => policy.Requirements.Add(new ConfiguredRequirement()));
+                .AddPolicy(TwitchManagerAuthenticationOptions.ConfiguredPolicy, policy => policy.Requirements.Add(new ConfiguredRequirement()));
 
             services.AddSingleton<IAuthorizationHandler, ConfiguredHandler>();
 
@@ -37,7 +37,7 @@ namespace TwitchManager.Auth
                     {
                         returnUrl = null;
                     }
-                    var url = "/configure";
+                    var url = "/settings";
 
                     if(returnUrl != null)
                     {

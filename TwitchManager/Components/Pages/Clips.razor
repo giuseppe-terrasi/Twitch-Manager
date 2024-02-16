@@ -1,43 +1,100 @@
-﻿@page "/"
+﻿@page "/clips"
 @using TwitchManager.Components.Abstractions
+@using TwitchManager.Components.Popups
 @using TwitchManager.Models.Clips
+@using TwitchManager.Models.Streamers
 @using TwitchManager.Services.Abstractions
 
 @inject IClipService ClipService
+@inject IStreamerService StreamerService
 @inject IJSRuntime JSRuntime
+@inject DialogService DialogService
 
 @rendermode InteractiveServerNotPrerendered
 
 @inherits BaseComponent
 
-<PageTitle>Clips</PageTitle>
+<PageTitle>@Localizer["ClipPageTitle"]</PageTitle>
 
-<h1>
-    Elenco clip
-</h1>
+<div class="row page-title">
+    <div class="col-8">
+        <h1>
+            @Localizer["ClipPageTitle"]
+        </h1>
+    </div>
+    <div class="col-4 d-flex justify-content-end align-items-center">
+        <RadzenLabel class="me-3">@Localizer["StreamerLabel"]:</RadzenLabel>
+        <RadzenDropDown Data="streamers" TValue="StreamerModel" @bind-Value=currentStreamer Context="streamer" Change="async () => await LoadClipsAsync(false)">
+            <Template>
+                <div class="d-flex align-items-center justify-content-start">
+                    <img src="@(((StreamerModel)streamer).ProfileImageUrl)" class="img-fluid me-2" style="height: 25px"/>
+                    <span>@(((StreamerModel)streamer).DisplayName)</span>
+                </div>
+            </Template>
+            <EmptyTemplate>
+                @Localizer["NoStreamerImportedLabel"]
+            </EmptyTemplate>
+        </RadzenDropDown>
+    </div>
+</div>
+
+<button class="btn btn-link text-decoration-none d-flex justify-content-center align-items-center text-black ps-0" @onclick="async () => await SyncWithTwitchAsync()"> 
+    @Localizer["SyncLabel"] <i class="ph ph-arrows-clockwise ms-2"></i>
+</button>
 
 
 <div class="row">
     <div class="col-12 table-responsive">
-        <RadzenDataGrid Data="@clips" TItem="ClipModel" PagerPosition="PagerPosition.Bottom" AllowPaging="true" AllowSorting="true" PageSize="50" AllowFiltering=true @ref=grid
-                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+        <RadzenDataGrid Data="@clips" TItem="ClipModel" PagerPosition="PagerPosition.Bottom" AllowPaging="true" AllowSorting="true" PageSize="10" AllowFiltering=true @ref=grid
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" SelectionMode="DataGridSelectionMode.Multiple">
             <HeaderTemplate>
-                Totali: <b>@clips.Count</b>
-                Filtrati: <b>@grid.View.Count()</b>
+                <div class="row">
+                    <div class="col-6 d-flex justify-content-start align-items-center">
+                        @Localizer["TotalsLabel"]: <b>@clips.Count()</b>
+                        @Localizer["FilteredLabel"]: <b>@grid.View.Count()</b>
+                    </div>
+                    <div class="col-6 d-flex justify-content-end align-items-center">
+                        <button class="btn btn-primary d-flex justify-content-center align-items-center" disabled="@(selectedClips.Count == 0)" @onclick="async () => await DownloadSelectedAsync()">
+                            @Localizer["DownloadSelectedLabel"] <i class="ph ph-download-simple ms-3"></i>
+                        </button>
+                    </div>
+                </div>
             </HeaderTemplate>
             <Columns>
-                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.Id))" Title="Id" Filterable=false Reorderable=false/>
-                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.CreatedAt))" Title="Creata il" />
-                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.Title))" Title="Titolo" />
-                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.ViewCount))" Title="Visualizzazioni" />
-                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.GameName))" Title="Gioco" />
-                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.CreatorName))" Title="Creata da" />
-                <RadzenDataGridColumn TItem="ClipModel" Title="Azioni" Context="clip">
+                <RadzenDataGridColumn TItem="ClipModel" Sortable="false" Filterable="false">
+                    <HeaderTemplate>
+                        <RadzenCheckBox TriState="false" TValue="bool?" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Select all items" }})"
+                                        Value="@(selectedClips?.Any() != true ? false : !clips.All(i => selectedClips.Contains(i)) ? null : clips.Any(i => selectedClips.Contains(i)))"
+                                        Change="@(args => selectedClips = args == true ? clips.ToList() : new List<ClipModel>())" />
+                    </HeaderTemplate>
+                    <Template Context="data">
+                        <RadzenCheckBox TriState="false" Value="@(selectedClips != null && selectedClips.Contains(data))" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Select item" }})"
+                                        TValue="bool" Change=@(args => { if(args) selectedClips.Add(data); else {selectedClips.Remove(data); StateHasChanged();} }) />
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.Id))" Title="Id" Filterable=false Reorderable=false Sortable=false/>
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.CreatedAt))" Title="Creata il" Context="clip">
                     <Template>
-                        <a href="@clip.Url" target="_blank">Apri</a>
-                        <button type="button" class="btn btn-primary" @onclick="async () => await DownloadAsync(clip.Url)">
-                            Download
-                        </button>
+                        @DateTime.SpecifyKind(clip.CreatedAt, DateTimeKind.Utc).ToLocalTime().ToString()
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.Title))" Title="@Localizer["TitleLabel"]" />
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.ViewCount))" Title="@Localizer["ViewCountLabel"]" />
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.GameName))" Title="@Localizer["GameNameLabel"]" />
+                <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.CreatorName))" Title="@Localizer["CreatorNameLabel"]" />
+                <RadzenDataGridColumn TItem="ClipModel" Title="@Localizer["ActionsLabel"]" Context="clip" Filterable=false Reorderable=false Sortable=false TextAlign="TextAlign.Center">
+                    <Template>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <a href="/show-clip/@clip.Id" target="_blank" class="text-decoration-none text-black">
+                                <i class="ph ph-eye grid-icon"></i>
+                            </a>
+                            <a href="@clip.Url" target="_blank" class="text-decoration-none text-black">
+                                <i class="ph ph-arrow-square-out grid-icon mx-3"></i>
+                            </a>
+                            <button type="button" class="btn btn-link text-decoration-none text-black p-0" @onclick="async () => await DownloadAsync(clip)">
+                                <i class="ph ph-download-simple grid-icon"></i>
+                            </button>
+                        </div>
                     </Template>
                 </RadzenDataGridColumn>
             </Columns>
@@ -46,7 +103,11 @@
 </div>
 @code {
 
-    private List<ClipModel> clips = new List<ClipModel>();
+    private IEnumerable<ClipModel> clips = new List<ClipModel>();
+    private IList<ClipModel> selectedClips = new List<ClipModel>();
+    private IEnumerable<StreamerModel> streamers = new List<StreamerModel>();
+
+    private StreamerModel currentStreamer = null;
 
     RadzenDataGrid<ClipModel> grid;
 
@@ -54,20 +115,60 @@
     {
         await ExecuteAsync(async () =>
         {
-            clips = await ClipService.GetAllAsync();
+            streamers = await StreamerService.GetAllAsync();
+            currentStreamer = streamers.FirstOrDefault();
+            await LoadClipsAsync(true);
         });
     }
 
-    private async Task DownloadAsync(string url)
+    private async Task LoadClipsAsync(bool isLoading)
+    {
+        var func = async () =>
+        {
+            clips = await ClipService.GetByStreamerAsync(currentStreamer?.Id ?? "");
+        };
+
+        if (isLoading)
+        {
+            await func();
+        }
+        else
+        {
+            await ExecuteAsync(func);
+        }
+    }
+
+    private async Task DownloadAsync(ClipModel clipModel)
+    {
+        await DialogService.OpenAsync<ClipDownloadPopup>(Localizer["DownloadSelectedTitle"], new Dictionary<string, object>()
+        {
+            { "Clips", new List<ClipModel>(){ clipModel } }, { "DialogService", DialogService }
+        }, new DialogOptions()
+        {
+            CloseDialogOnEsc = false,
+            CloseDialogOnOverlayClick = false,
+            ShowClose = false
+        });
+    }
+
+    private async Task SyncWithTwitchAsync()
     {
         await ExecuteAsync(async () =>
         {
-            var downloadLink = await ClipService.GetDownloadLinkAsync(url);
+            await ClipService.GetFromApiAsync(currentStreamer?.Id);
+            await LoadClipsAsync(true);
+        });
+    }
 
-            if(!string.IsNullOrEmpty(downloadLink))
-            {
-                await JSRuntime.InvokeVoidAsync("openUrl", downloadLink);
-            }
+    private async Task DownloadSelectedAsync()
+    {
+        await DialogService.OpenAsync<ClipDownloadPopup>(Localizer["DownloadSelectedTitle"], new Dictionary<string, object>()
+        {
+            { "Clips", selectedClips }, { "DialogService", DialogService }
+        }, new DialogOptions() {
+            CloseDialogOnEsc = false,
+            CloseDialogOnOverlayClick = false,
+            ShowClose = false
         });
     }
 }

@@ -1,8 +1,27 @@
-﻿@inherits LayoutComponentBase
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using TwitchManager.Auth
+@inherits LayoutComponentBase
 
 <div class="container-fluid">
-    @Body
+    <div class="row">
+        <AuthorizeView Policy="@TwitchManagerAuthenticationOptions.ConfiguredPolicy">
+            <Authorized>
+                <div class="col-auto">
+                    <NavMenu @rendermode=InteractiveServerNotPrerendered />
+                </div>
+            </Authorized>
+        </AuthorizeView>
+        <main class="col">
+            <div class="row mt-3 mx-0">
+                <div class="col-12 p-0">
+                    @Body
+                </div>
+            </div>
+        </main>
+    </div>
 </div>
+
+<RadzenComponents @rendermode="@InteractiveServerNotPrerendered" />
 
 
 <div id="blazor-error-ui">

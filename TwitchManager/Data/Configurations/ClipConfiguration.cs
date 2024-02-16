@@ -14,6 +14,9 @@ namespace TwitchManager.Data.Configurations
             builder.HasOne(c => c.Game)
                 .WithMany(g => g.Clips)
                 .HasForeignKey(c => c.GameId);
+            builder.HasOne(c => c.Streamer)
+                .WithMany(g => g.Clips)
+                .HasForeignKey(c => c.BroadcasterId);
         }
     }
 }

@@ -1,0 +1,77 @@
+﻿@using Microsoft.Extensions.Localization
+@using TwitchManager.Translations
+@inject IStringLocalizer<Translation> Localizer
+
+@inject NavigationManager NavigationManager
+
+<div class="menu-container">
+    <div class="logo-container">
+        <a href="/clips" class="text-decoration-none d-flex align-items-end">
+            <img src="img/logo.png" height="35" /><span>witch Manager</span>
+        </a>
+        
+    </div>
+
+    <div class="menu-content">
+        <div class="w-100">
+            <div class="row mx-0">
+                <div class="col-12 p-0 @(current == "streamers" ? "selected" : "")">
+                    <a href="/streamers" class="text-decoration-none">
+                        <i class="ph ph-users"></i> @Localizer["StreamersPageTitle"]
+                    </a>
+                </div>
+            </div>
+            <div class="row mx-0">
+                <div class="col-12 p-0 @(current == "clips" ? "selected" : "")">
+                    <a href="/clips" class="text-decoration-none">
+                        <i class="ph ph-film-reel"></i> @Localizer["ClipPageTitle"]
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="w-100">
+            <div class="row mx-0">
+                <div class="col-12 p-0 @(current == "settings" ? "selected" : "")">
+                    <a href="/settings" class="text-decoration-none">
+                        <i class="ph ph-gear"></i> @Localizer["SettingsLabel"]
+                    </a>
+                </div>
+            </div>
+            <div class="row mx-0">
+                <div class="col-12 p-0">
+                    <a href="/shutdown" class="text-decoration-none">
+                        <i class="ph ph-power"></i> @Localizer["ShutdownLabel"]
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private string current = "";
+
+    protected override void OnParametersSet()
+    {
+        SetCurrent();
+
+        NavigationManager.LocationChanged += (s, e) =>
+        {
+            SetCurrent();
+        };
+    }
+
+    private void SetCurrent()
+    {
+        var path = new Uri(NavigationManager.Uri).PathAndQuery;
+        if (path.StartsWith("/streamer"))
+            current = "streamers";
+        else if (path.StartsWith("/clip"))
+            current = "clips";
+        else if (path.StartsWith("/settings"))
+            current = "settings";
+
+        StateHasChanged();
+    }
+}

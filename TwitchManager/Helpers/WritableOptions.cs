@@ -27,6 +27,9 @@ namespace TwitchManager.Helpers
             var fileInfo = fileProvider.GetFileInfo(_file);
             var physicalPath = fileInfo.PhysicalPath;
 
+            if (!File.Exists(physicalPath))
+                File.WriteAllText(physicalPath, "{}");
+
             var jObject = JsonSerializer.Deserialize<JsonObject>(File.ReadAllText(physicalPath));
             var sectionObject = jObject.TryGetPropertyValue(_section, out JsonNode section) ?
                 JsonSerializer.Deserialize<T>(section.ToString()) : (Value ?? new T());
