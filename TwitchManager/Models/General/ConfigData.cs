@@ -30,7 +30,7 @@ namespace TwitchManager.Models.General
                 }
                 else if(DbConnectionString.Contains("Data Source="))
                 {
-                    return DbConnectionString.Replace("Data Source=", "");
+                    return DbConnectionString.Replace("Data Source=", "").Replace(@"\\", @"\");
                 }
                 else
                 {
