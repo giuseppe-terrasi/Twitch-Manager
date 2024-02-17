@@ -103,6 +103,34 @@ namespace TwitchManager.Services.Implementations
 
                 foreach(var clip in clips)
                 {
+                    var existingGame = await context.Games.FindAsync(clip.GameId);
+                    if(existingGame == null)
+                    {
+                        var gameRequest = new GetGameHttpRequestMessage(id: clip.GameId);
+
+                        var responseMessage = await client.SendAsync(gameRequest);
+
+                        var gameResponse = await gameRequest.GetDataAsync(responseMessage);
+
+                        var games = gameResponse.Data.Select(mapper.Map<Game>);
+
+                        if (games.Any())
+                        {
+                            var game = games.First();
+                            try
+                            {
+                                context.Games.Add(game);
+
+                                await context.SaveChangesAsync();
+                            }
+                            catch
+                            {
+                                context.Entry(game).State = EntityState.Detached;
+                                continue;
+                            }
+                        }
+                    }
+
                     try
                     {
                         context.Clips.Add(clip);
@@ -118,38 +146,6 @@ namespace TwitchManager.Services.Implementations
                 cursor = clipResponse.Pagination.Cursor;
             }
             while (!string.IsNullOrEmpty(cursor));
-
-            var missingGameIds = await context.Clips
-                .Where(c => c.BroadcasterId == streamerId && !context.Games.Any(g => g.Id == c.GameId))
-                .Select(c => c.GameId)
-                .Distinct()
-                .ToListAsync();
-
-            foreach(var gameId in missingGameIds)
-            {
-                var request = new GetGameHttpRequestMessage(id: gameId);
-
-                var response = await client.SendAsync(request);
-
-                var gameResponse = await request.GetDataAsync(response);
-
-                var games = gameResponse.Data.Select(mapper.Map<Game>);
-
-                if(games.Any())
-                {
-                    var game = games.First();
-                    try
-                    {
-                        context.Games.Add(game);
-
-                        await context.SaveChangesAsync();
-                    }
-                    catch
-                    {
-                        context.Entry(game).State = EntityState.Detached;
-                    }
-                }
-            }
             
         }
 
