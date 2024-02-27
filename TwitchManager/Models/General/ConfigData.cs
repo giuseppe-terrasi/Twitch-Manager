@@ -30,7 +30,7 @@ namespace TwitchManager.Models.General
                 }
                 else if(DbConnectionString.Contains("Data Source="))
                 {
-                    return DbConnectionString.Replace("Data Source=", "");
+                    return DbConnectionString.Replace("Data Source=", "").Replace(@"\\", @"\");
                 }
                 else
                 {
@@ -44,7 +44,7 @@ namespace TwitchManager.Models.General
         }
 
         public bool IsConfigured() =>
-            !string.IsNullOrEmpty(DbConnectionString) && !string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret) && !string.IsNullOrEmpty(TokenUrl) && !string.IsNullOrEmpty(BaseUrl)
+            !string.IsNullOrEmpty(FilePath) && !string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret) && !string.IsNullOrEmpty(TokenUrl) && !string.IsNullOrEmpty(BaseUrl)
             && !string.IsNullOrEmpty(ClipDownloadPath);
     }
 }
