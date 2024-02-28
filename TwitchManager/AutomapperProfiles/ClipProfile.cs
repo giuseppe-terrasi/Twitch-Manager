@@ -19,8 +19,10 @@ namespace TwitchManager.AutomapperProfiles
                 .ReverseMap();
 
             CreateMap<ClipModel, Data.Domains.Clip>()
+                .ForMember(c => c.CreatedAt, opt => opt.MapFrom(c => DateTime.SpecifyKind(c.CreatedAt, DateTimeKind.Local).ToUniversalTime()))
                 .ReverseMap()
-                .ForMember(c => c.GameName, opt => opt.MapFrom(c => c.Game.Name));
+                .ForMember(c => c.GameName, opt => opt.MapFrom(c => c.Game.Name))
+                .ForMember(c => c.CreatedAt, opt => opt.MapFrom(c => DateTime.SpecifyKind(c.CreatedAt, DateTimeKind.Utc).ToLocalTime()));
         }
     }
 }

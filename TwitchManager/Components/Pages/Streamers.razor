@@ -34,7 +34,7 @@
 
 <div class="row mt-3">
     <div class="col-12 table-responsive">
-        <RadzenDataGrid Data="@streamers" TItem="StreamerModel" PagerPosition="PagerPosition.Bottom" AllowPaging="true" AllowSorting="true" PageSize="10" AllowFiltering=true @ref=grid
+        <RadzenDataGrid Data="@streamers" TItem="StreamerModel" PagerPosition="PagerPosition.Bottom" AllowPaging="true" AllowSorting="true" PageSize="10" AllowFiltering=false @ref=grid
                         FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
             <HeaderTemplate>
                 @Localizer["TotalsLabel"]: <b>@streamers.Count()</b>

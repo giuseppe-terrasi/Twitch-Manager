@@ -132,11 +132,20 @@
   <data name="CancelLabel" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="ClipCreatedFromLabel" xml:space="preserve">
+    <value>Created from</value>
+  </data>
+  <data name="ClipCreatedToLabel" xml:space="preserve">
+    <value>Created to</value>
+  </data>
   <data name="ClipDownloadPathLabel" xml:space="preserve">
     <value>Clip download path</value>
   </data>
   <data name="ClipPageTitle" xml:space="preserve">
     <value>Clips</value>
+  </data>
+  <data name="ClipPerPageLabel" xml:space="preserve">
+    <value>Clips per page</value>
   </data>
   <data name="CloseLabel" xml:space="preserve">
     <value>Close</value>
@@ -170,6 +179,9 @@
   </data>
   <data name="FilteredLabel" xml:space="preserve">
     <value>Filtered</value>
+  </data>
+  <data name="FilterLabel" xml:space="preserve">
+    <value>Filters</value>
   </data>
   <data name="GameNameLabel" xml:space="preserve">
     <value>Game</value>
