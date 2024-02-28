@@ -35,8 +35,36 @@
         }
     </script>
     <script>
+
         function openUrl(url) {
             window.open(url, "_blank");
+        }
+
+        function toggleLightMode(init) {
+            
+            var darkMode = localStorage.getItem("TwitchManager-darkMode") || "false";
+
+            if (!init && darkMode === "true") {
+                darkMode = "false";
+            }
+            else if(!init)
+            {
+                darkMode = "true";
+            }
+
+            if (darkMode === "true") {
+
+                document.body.classList.add("dark-mode");
+                document.getElementById("light-mode-icon").classList.add("ph-sun");
+                document.getElementById("light-mode-icon").classList.remove("ph-moon");
+            }
+            else {
+                document.body.classList.remove("dark-mode");
+                document.getElementById("light-mode-icon").classList.remove("ph-sun");
+                document.getElementById("light-mode-icon").classList.add("ph-moon");
+            }
+
+            localStorage.setItem("TwitchManager-darkMode", darkMode);
         }
     </script>
 </body>

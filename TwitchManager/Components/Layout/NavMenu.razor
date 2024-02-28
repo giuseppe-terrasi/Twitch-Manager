@@ -3,6 +3,7 @@
 @inject IStringLocalizer<Translation> Localizer
 
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 <div class="menu-container">
     <div class="logo-container">
@@ -21,7 +22,7 @@
                     </a>
                 </div>
             </div>
-            <div class="row mx-0">
+            <div class="row mx-0 mt-2">
                 <div class="col-12 p-0 @(current == "clips" ? "selected" : "")">
                     <a href="/clips" class="text-decoration-none">
                         <i class="ph ph-film-reel"></i> @Localizer["ClipPageTitle"]
@@ -29,7 +30,7 @@
                 </div>
             </div>
         </div>
-        <div class="w-100">
+        <div class="w-100 mb-3">
             <div class="row mx-0">
                 <div class="col-12 p-0 @(current == "settings" ? "selected" : "")">
                     <a href="/settings" class="text-decoration-none">
@@ -37,11 +38,12 @@
                     </a>
                 </div>
             </div>
-            <div class="row mx-0">
-                <div class="col-12 p-0">
+            <div class="row mx-0 mt-2">
+                <div class="col-12 p-0 d-flex align-items-center justify-content-between">
                     <a href="/shutdown" class="text-decoration-none">
                         <i class="ph ph-power"></i> @Localizer["ShutdownLabel"]
                     </a>
+                    <i class="ph me-3 pointer" onclick="toggleLightMode(false)" id="light-mode-icon"></i>
                 </div>
             </div>
         </div>
@@ -73,5 +75,10 @@
             current = "settings";
 
         StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeVoidAsync("toggleLightMode", true);
     }
 }

@@ -73,19 +73,22 @@ label {
 }
 
 .menu-container {
-    height: 100%;
+    height: 100vh;
     min-height: 100vh;
     width: 200px;
     border-right: 1px solid #00000033;
+    position: sticky;
+    top: 0;
+    left: 0;
+    display: grid;
+    grid-template-rows: auto 1fr;
 }
 
 .menu-content {
-    position: sticky;
-    top: 65px;
-    height: 90%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    margin-top: 20px;
 }
 
 .menu-container a {
@@ -107,9 +110,10 @@ label {
 .logo-container {
     display: flex;
     align-items: end;
-    position: sticky;
-    top: 15px;
+    padding-top: 15px;
     margin-left: -10px;
+    background-color: #FFFFFF;
+    z-index: 9999;
 }
 .logo-container span {
     margin-left: -9px;
@@ -172,3 +176,73 @@ label {
 .rz-progressbar-determinate.rz-progressbar-primary .rz-progressbar-value {
     background-color: #6441A5 !important;
 }
+
+.rz-cell-filter-content {
+    flex-direction: column;
+}
+
+table td {
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.rz-cell-data {
+    white-space: normal !important;
+}
+
+.rz-datatable, .rz-group-header, .rz-paginator, .rz-datatable-thead th,
+.rz-grid-table thead th {
+    background-color: inherit !important;
+    color: inherit !important
+}
+/* DARK MODE */
+.dark-mode {
+    background-color: #1f1f23;
+    color: #FFFFFF;
+}
+
+    .dark-mode .logo-container {
+        background-color: #1f1f23;
+    }
+
+    .dark-mode .menu-container {
+        border-right: 1px solid #FFFFFF33;
+    }
+
+.dark-mode .menu-container a {
+    color: #FFFFFF;
+}
+
+    .dark-mode .menu-container .selected a {
+        color: #6441A5;
+        font-weight: bold;
+    }
+
+    .dark-mode .page-title {
+        background-color: #1b1b1b;
+        color: #FFFFFF;
+    }
+
+    .dark-mode .text-black {
+        color: #FFFFFF !important;
+    }
+
+    .dark-mode .rz-column-title, .dark-mode .rz-cell-data {
+        color: #FFFFFF !important;
+    }
+
+.dark-mode .rz-grid-table-striped tbody > tr:not(.rz-expanded-row-content):nth-child(even) > td {
+    background-color: inherit !important;
+}
+
+    .dark-mode .rz-grid-table-striped tbody > tr:not(.rz-expanded-row-content):nth-child(odd) > td {
+        background-color: #393838 !important;
+    }
+
+    .dark-mode .rz-paginator-page {
+        color: #FFFFFF !important;
+    }
+
+    .dark-mode .rz-paginator-first, .dark-mode .rz-paginator-prev, .dark-mode .rz-paginator-next, .dark-mode .rz-paginator-last {
+        color: #FFFFFF !important;
+    }
