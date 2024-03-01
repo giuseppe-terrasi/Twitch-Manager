@@ -246,3 +246,11 @@ table td {
     .dark-mode .rz-paginator-first, .dark-mode .rz-paginator-prev, .dark-mode .rz-paginator-next, .dark-mode .rz-paginator-last {
         color: #FFFFFF !important;
     }
+
+    .dark-mode .rz-dialog, .dark-mode .rz-dialog-titlebar {
+    background-color: #1b1b1b !important;
+    }
+
+    .dark-mode .rz-dialog-title {
+        color: #FFFFFF;
+    }

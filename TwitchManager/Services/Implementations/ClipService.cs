@@ -1,13 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 
-using OpenQA.Selenium.Chrome;
-
 using System.Linq.Dynamic.Core;
-using System.Text.RegularExpressions;
 
 using TwitchManager.Comunications.TwicthApi.Api.Clips;
 using TwitchManager.Comunications.TwicthApi.Api.Games;
+using TwitchManager.Comunications.TwitchGQL;
 using TwitchManager.Data;
 using TwitchManager.Data.Domains;
 using TwitchManager.Models.Clips;
@@ -15,10 +13,8 @@ using TwitchManager.Services.Abstractions;
 
 namespace TwitchManager.Services.Implementations
 {
-    public partial class ClipService(IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IMapper mapper, IHttpClientFactory httpClientFactory) : IClipService, IDisposable
+    public partial class ClipService(IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IMapper mapper, IHttpClientFactory httpClientFactory) : IClipService
     {
-        private ChromeDriver chromeDriver = null;
-
         public async Task<IEnumerable<ClipModel>> GetAllAsync()
         {
             var context = await dbContextFactory.CreateDbContextAsync();
@@ -31,38 +27,16 @@ namespace TwitchManager.Services.Implementations
             return clips;
         }
 
-        public async Task<string> GetDownloadLinkAsync(string clipUrl, CancellationToken cancellationToken)
+        public async Task<string> GetDownloadLinkAsync(string cliId, CancellationToken cancellationToken)
         {
-            var result = await Task.Run(() =>
-            {
-                if(chromeDriver == null)
-                {
-                    CreateChromeDriver();
-                }
+            var client = httpClientFactory.CreateClient("TwitchGQL");
+            var request = new ClipTokenTwitchGQLRequest(cliId);
 
-                chromeDriver.Navigate().GoToUrl(clipUrl);
+            var httpResponse = await client.SendAsync(request, cancellationToken);  
+            var clipToken = (await request.GetDataAsync(httpResponse)).FirstOrDefault() ?? throw new Exception("No video found in the clip");
 
-                var html = chromeDriver.PageSource;
-
-                var match = VideoRegex().Match(html);
-
-                if (match.Success)
-                {
-                    var videoTag = match.Value;
-
-                    var videoUrl = videoTag.Split("src=\"")[1].Split("\"")[0].Replace("&amp;", "&");
-
-                    return videoUrl;
-                }
-
-                throw new Exception("No video found in the clip");
-            }, cancellationToken);
-
-            return result;
+            return clipToken.GetUrl();
         }
-
-        [GeneratedRegex("<video.*></video>")]
-        private static partial Regex VideoRegex();
 
         public async Task<ClipModel> GetByIdAsync(string id)
         {
@@ -160,27 +134,6 @@ namespace TwitchManager.Services.Implementations
                 .ToListAsync();
 
             return clips;
-        }
-
-        public void CreateChromeDriver()
-        {
-            var options = new ChromeOptions();
-            options.AddArguments("--headless");
-            options.AddArguments("--disable-gpu");
-
-            chromeDriver = new ChromeDriver(options);
-        }
-
-        public void DisposeChromeDriver()
-        {
-            chromeDriver?.Dispose();
-            chromeDriver = null;
-        }
-
-        public void Dispose()
-        {
-            DisposeChromeDriver();
-            GC.SuppressFinalize(this);
         }
     }
 }

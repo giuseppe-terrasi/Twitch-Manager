@@ -76,7 +76,7 @@
 
             try
             {
-                var downloadLink = await ClipService.GetDownloadLinkAsync(clip.Url, cancellationTokenSource.Token);
+                var downloadLink = await ClipService.GetDownloadLinkAsync(clip.Id, cancellationTokenSource.Token);
 
                 if (!string.IsNullOrEmpty(downloadLink))
                 {
@@ -103,8 +103,6 @@
         }
 
         current = "";
-
-        ClipService.DisposeChromeDriver();
     }
 
     private void Cancel()

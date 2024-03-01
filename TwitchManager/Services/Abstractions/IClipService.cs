@@ -13,9 +13,5 @@ namespace TwitchManager.Services.Abstractions
         Task<ClipModel> GetByIdAsync(string id);
 
         Task GetFromApiAsync(string streamerId);
-
-        void CreateChromeDriver();
-
-        void DisposeChromeDriver();
     }
 }

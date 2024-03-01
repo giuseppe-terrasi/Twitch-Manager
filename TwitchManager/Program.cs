@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using TwitchManager.Auth;
 using TwitchManager.Components;
 using TwitchManager.Comunications.TwicthApi;
+using TwitchManager.Comunications.TwitchGQL;
 using TwitchManager.Data;
 using TwitchManager.Helpers;
 using TwitchManager.Models.General;
@@ -37,6 +38,10 @@ builder.Services.AddScoped<IClipService, ClipService>();
 builder.Services.AddHttpClient("TwitchApi")
     .ConfigureHttpClient((s, c) => c.BaseAddress = new Uri(s.GetRequiredService<IOptionsMonitor<ConfigData>>().CurrentValue.BaseUrl))
     .ConfigurePrimaryHttpMessageHandler((s) => new TwitchApiHttpClientHandler(s.GetRequiredService<IWritableOptions<ConfigData>>()));
+
+builder.Services.AddHttpClient("TwitchGQL")
+    .ConfigureHttpClient((s, c) => c.BaseAddress = new Uri("https://gql.twitch.tv/gql"))
+    .ConfigurePrimaryHttpMessageHandler((s) => new TwitchGQLHttpClientHandler());
 
 
 builder.Services.AddDbContextFactory<TwitchManagerDbContext>();
