@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 
@@ -24,6 +24,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/keys"))
+    .SetApplicationName("TwitchManager");
 
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
@@ -99,27 +103,34 @@ app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Lifetime.ApplicationStarted.Register(() =>
-{
-    if (app.Environment.IsDevelopment())
-        return;
+//app.Lifetime.ApplicationStarted.Register(() =>
+//{
+//    if (app.Environment.IsDevelopment())
+//        return;
 
-    var server = app.Services.GetService<IServer>();
-    var addressFeature = server.Features.Get<IServerAddressesFeature>();
+//    var server = app.Services.GetService<IServer>();
+//    var addressFeature = server.Features.Get<IServerAddressesFeature>();
 
-    foreach ( var address in addressFeature.Addresses)
-    {
-        var uri = new Uri(address); 
-        if(uri.Scheme == "http")
-        {
-            OpenBrowser(uri.ToString());
-            break;
-        }
-    }
-});
+//    foreach ( var address in addressFeature.Addresses)
+//    {
+//        var uri = new Uri(address); 
+//        if(uri.Scheme == "http")
+//        {
+//            OpenBrowser(uri.ToString());
+//            break;
+//        }
+//    }
+//});
 
-app.MapGet("/shutdown", () => { 
-    app.StopAsync().ConfigureAwait(false);
+app.MapGet("/shutdown", async (context) => {
+
+    await context.SignOutAsync(TwitchManagerAuthenticationOptions.AuthenticationScheme);
+
+    context.Response.Redirect("/login");
+
+    /*await app.StopAsync();
+
+    Results.Ok();*/
 });
 
 app.Run();

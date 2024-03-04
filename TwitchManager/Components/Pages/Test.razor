@@ -1,0 +1,22 @@
+﻿@page "/test"
+@using System.Text
+
+@inject IJSRuntime JSRuntime
+
+@rendermode InteractiveServerNotPrerendered
+
+<h3>Test</h3>
+
+<button @onclick="async () => await TestDirAsync()">Test</button>
+
+@code {
+
+    private async Task TestDirAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("getDownloadDir");
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("Hello, World!"));
+        using var streamRef = new DotNetStreamReference(stream: stream, leaveOpen: false);
+        await JSRuntime.InvokeVoidAsync("saveFile", streamRef, "test.txt");
+    }
+}

@@ -195,6 +195,12 @@
   <data name="InvalidDbFileExtesion" xml:space="preserve">
     <value>Invalid {0} extension. Data file must have .db extension</value>
   </data>
+  <data name="LoginText" xml:space="preserve">
+    <value>Please login with your Twitch account to continue.</value>
+  </data>
+  <data name="LoginWithTwitchLabel" xml:space="preserve">
+    <value>Login with Twitch</value>
+  </data>
   <data name="NoStreamerImportedLabel" xml:space="preserve">
     <value>No streamer imported</value>
   </data>

@@ -195,6 +195,12 @@
   <data name="InvalidDbFileExtesion" xml:space="preserve">
     <value>Estensione {0} non valida. il file deve avere estensione .db</value>
   </data>
+  <data name="LoginText" xml:space="preserve">
+    <value>Accedi con il tuo account twitch per continuare</value>
+  </data>
+  <data name="LoginWithTwitchLabel" xml:space="preserve">
+    <value>Accedi con Twitch</value>
+  </data>
   <data name="NoStreamerImportedLabel" xml:space="preserve">
     <value>Nessuno streamer importato</value>
   </data>

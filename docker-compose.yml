@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  twitchmanager:
+    image: ${DOCKER_REGISTRY-}twitchmanager
+    build:
+      context: .
+      dockerfile: TwitchManager/Dockerfile

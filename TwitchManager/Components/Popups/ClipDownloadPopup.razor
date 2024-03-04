@@ -11,6 +11,7 @@
 
 @inject IOptionsMonitor<ConfigData> OptionsMonitor
 
+@inject IJSRuntime JSRuntime
 
 <div class="row">
     <div class="col-12">
@@ -68,6 +69,13 @@
     {
         remainingClips = Clips.Count;
 
+        var configType = OptionsMonitor.CurrentValue.ConfigType;
+
+        if(configType == ConfigType.Web)
+        {
+            await JSRuntime.InvokeVoidAsync("getDownloadDir");
+        }
+
         foreach (var clip in Clips)
         {
             current = clip.Title;
@@ -81,10 +89,18 @@
                 if (!string.IsNullOrEmpty(downloadLink))
                 {
                     var httpClient = new HttpClient();
-                    var response = await httpClient.GetAsync(downloadLink, cancellationTokenSource.Token);
-                    using (var fs = new FileStream(Path.Combine(OptionsMonitor.CurrentValue.ClipDownloadPath,$"{clip.Id}.mp4"), FileMode.Create))
+                    var response = await httpClient.GetStreamAsync(downloadLink, cancellationTokenSource.Token);
+                    if(configType == ConfigType.Web)
                     {
-                        await response.Content.CopyToAsync(fs, cancellationTokenSource.Token);
+                        using var streamRef = new DotNetStreamReference(stream: response, leaveOpen: true);
+                        await JSRuntime.InvokeVoidAsync("saveFile", streamRef, $"{clip.Id}.mp4");
+                    }
+                    else
+                    {
+                        using (var fs = new FileStream(Path.Combine(OptionsMonitor.CurrentValue.ClipDownloadPath, $"{clip.Id}.mp4"), FileMode.Create))
+                        {
+                            await response.CopyToAsync(fs, cancellationTokenSource.Token);
+                        }
                     }
                 }
             }

@@ -11,6 +11,8 @@
 	<OutputType>Exe</OutputType>
 	<DefaultItemExcludes>wwwroot/**</DefaultItemExcludes>
     <UserSecretsId>3003dee8-9caa-4770-90f9-b78c482ce6ce</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -19,9 +21,9 @@
 				$(TargetName).$([System.String]::new('%(RecursiveDir)').Replace('\','.'))%(FileName)%(Extension)
 			</LogicalName>
 		</EmbeddedResource>
-		<EmbeddedResource Include="obj\$(Configuration)\net8.0\scopedcss\bundle\$(ProjectName).styles.css" CopyToOutputDirectory="Always">
+		<!--<EmbeddedResource Include="obj\$(Configuration)\net8.0\scopedcss\bundle\$(ProjectName).styles.css" CopyToOutputDirectory="Always">
 			<LogicalName>$(TargetName).$(ProjectName).styles.css</LogicalName>
-		</EmbeddedResource>
+		</EmbeddedResource>-->
 		<EmbeddedResource Include="bin\$(Configuration)\net8.0\publish\wwwroot\_content\**" CopyToOutputDirectory="Always">
 			<LogicalName>
 				$(TargetName)._content.$([System.String]::new('%(RecursiveDir)').Replace('\','.'))%(FileName)%(Extension)
@@ -38,6 +40,7 @@
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
 	  <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.2" />
+	  <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
 	  <PackageReference Include="Radzen.Blazor" Version="4.24.7" />
 	</ItemGroup>
 

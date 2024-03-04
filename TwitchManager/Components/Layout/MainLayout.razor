@@ -4,11 +4,15 @@
 
 <div class="container-fluid">
     <div class="row">
-        <AuthorizeView Policy="@TwitchManagerAuthenticationOptions.ConfiguredPolicy">
+        <AuthorizeView>
             <Authorized>
-                <div class="col-auto">
-                    <NavMenu @rendermode=InteractiveServerNotPrerendered />
-                </div>
+                <AuthorizeView Policy="@TwitchManagerAuthenticationOptions.ConfiguredPolicy" Context="inner">
+                    <Authorized>
+                        <div class="col-auto">
+                            <NavMenu @rendermode=InteractiveServerNotPrerendered/>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
             </Authorized>
         </AuthorizeView>
         <main class="col">

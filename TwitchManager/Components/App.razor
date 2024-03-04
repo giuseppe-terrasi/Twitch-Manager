@@ -67,6 +67,23 @@
             localStorage.setItem("TwitchManager-darkMode", darkMode);
         }
     </script>
+    <script>
+        async function getDownloadDir() {
+            window.downloadDir = null;
+
+            window.downloadDir = await window.showDirectoryPicker();
+            window.downloadDir.requestPermission({ mode: "readwrite" });
+        }
+
+        async function saveFile(streamRef, filename) {
+            const stream = await streamRef.stream();
+            //const file = new Blob([stream], { type: "text/plain" });
+            const handle = await window.downloadDir.getFileHandle(filename, { create: true });
+            const writable = await handle.createWritable();
+            stream.pipeTo(writable);
+            //await writable.close();
+        }
+    </script>
 </body>
 </html>
 

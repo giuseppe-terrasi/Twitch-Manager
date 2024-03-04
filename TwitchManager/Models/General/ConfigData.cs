@@ -2,6 +2,12 @@
 
 namespace TwitchManager.Models.General
 {
+    public enum ConfigType
+    {
+        StandAlone,
+        Web
+    }
+
     public class ConfigData
     {
         public string DbConnectionString { get; set; }
@@ -19,6 +25,10 @@ namespace TwitchManager.Models.General
         public DateTime? TokenExpiration { get; set; }
 
         public string ClipDownloadPath { get; set; }
+
+        public ConfigType? ConfigType { get; set; }
+
+        public List<string> AdminUsers { get; set; } = [];
 
         [JsonIgnore]
         public string FilePath { 
@@ -45,6 +55,6 @@ namespace TwitchManager.Models.General
 
         public bool IsConfigured() =>
             !string.IsNullOrEmpty(FilePath) && !string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret) && !string.IsNullOrEmpty(TokenUrl) && !string.IsNullOrEmpty(BaseUrl)
-            && !string.IsNullOrEmpty(ClipDownloadPath);
+            && !string.IsNullOrEmpty(ClipDownloadPath) && ConfigType.HasValue;
     }
 }

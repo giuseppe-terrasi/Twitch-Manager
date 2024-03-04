@@ -1,0 +1,64 @@
+﻿@page "/login"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using TwitchManager.Components.Layout
+@using TwitchManager.Models.General
+@using TwitchManager.Translations
+
+@inject IOptionsMonitor<ConfigData> OptionsMonitor
+@inject NavigationManager NavigationManager
+
+@attribute [AllowAnonymous]
+@attribute [AuthorizeConfigured]
+@inject IStringLocalizer<Translation> Localizer  
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@layout EmptyLayout
+
+@rendermode InteractiveServerNotPrerendered
+
+
+<div class="d-flex align-items-center justify-content-center vh-100">
+    <div class="card">
+        <div class="card-body text-center p-5">
+            <div class="text-decoration-none d-flex align-items-end justify-content-center">
+                <img src="img/logo.png" height="35" /><span style="margin-left: -8px">witch Manager</span>
+            </div>
+            <h5 class="card-title mt-3">Login</h5>
+            <p class="card-text">@Localizer["LoginText"]</p>
+            <a href="@url" class="btn btn-primary d-flex align-items-center justify-content-center">
+
+                @Localizer["LoginWithTwitchLabel"] <i class="ph ph-twitch-logo ms-1"></i>
+            </a>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <CultureSelector />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [SupplyParameterFromQuery]
+    public string Result { get; set; }
+
+    string url = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+
+        if(user.Identity.IsAuthenticated || Result == "ok")
+        {
+            NavigationManager.NavigateTo("/clips", true);
+            return;
+        }
+        
+        url = $"https://id.twitch.tv/oauth2/authorize?response_type=code&client_id={OptionsMonitor.CurrentValue.ClientId}&redirect_uri=https://twitch-manager.giuseppe-terrasi.it";
+    }
+
+}

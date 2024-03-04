@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
+using System;
+
 using TwitchManager.Auth.Requirements;
 
 namespace TwitchManager.Auth
@@ -13,7 +15,15 @@ namespace TwitchManager.Auth
                 options.DefaultAuthenticateScheme = TwitchManagerAuthenticationOptions.AuthenticationScheme;
                 options.DefaultChallengeScheme = TwitchManagerAuthenticationOptions.AuthenticationScheme;
             })
-            .AddScheme<TwitchManagerAuthenticationOptions, TwitchManagerAuthenticationHandler>(TwitchManagerAuthenticationOptions.AuthenticationScheme, null);
+            //.AddScheme<TwitchManagerAuthenticationOptions, TwitchManagerAuthenticationHandler>(TwitchManagerAuthenticationOptions.AuthenticationScheme, null)
+            .AddCookie(TwitchManagerAuthenticationOptions.AuthenticationScheme, options =>
+            {
+                options.Cookie.Name = "TwitchManagerAuth";
+                options.Cookie.HttpOnly = true;
+                options.ExpireTimeSpan = TimeSpan.FromDays(30);
+                options.SlidingExpiration = true;
+                options.LoginPath = "/login";
+            });
 
             services.AddAuthorizationBuilder()
                 .AddPolicy(TwitchManagerAuthenticationOptions.ConfiguredPolicy, policy => policy.Requirements.Add(new ConfiguredRequirement()));
@@ -25,27 +35,43 @@ namespace TwitchManager.Auth
 
         public static void UseTwitchManagerAuth(this IApplicationBuilder app)
         {
+            app.UseAuthentication();
+            app.UseAuthorization();
+            
             app.Use(async (context, next) =>
             {
                 await next();
 
-                if (context.Response.StatusCode == 403 || context.Response.StatusCode == 401)
+                if(context.Response.StatusCode != 401 && context.Response.StatusCode != 403)
                 {
-                    var returnUrl = context.Request.Path + context.Request.QueryString;
-
-                    if(returnUrl == "/")
-                    {
-                        returnUrl = null;
-                    }
-                    var url = "/settings";
-
-                    if(returnUrl != null)
-                    {
-                        url += $"?returnUrl={returnUrl}";
-                    }
-
-                    context.Response.Redirect(url);
+                    return;
                 }
+
+                var returnUrl = context.Request.Path + context.Request.QueryString;
+
+                if (returnUrl == "/")
+                {
+                    returnUrl = null;
+                }
+
+                string url;
+
+                if (context.Response.StatusCode == 403)
+                {
+                    url = "/settings";
+
+                }
+                else
+                {
+                    url = "/login";
+                }
+
+                if (returnUrl != null)
+                {
+                    url += $"?returnUrl={returnUrl}";
+                }
+
+                context.Response.Redirect(url);
             });
 
 

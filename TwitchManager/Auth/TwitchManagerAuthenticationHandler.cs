@@ -18,13 +18,14 @@ namespace TwitchManager.Auth
                 return Task.FromResult(AuthenticateResult.Fail("No configuration found"));
             }
 
-            var claims = new List<Claim>
+            if(!Request.Cookies.ContainsKey("TwitchManagerAuth"))
             {
-                new(ClaimTypes.Name, "TwitchManager")
-            };
+                return Task.FromResult(AuthenticateResult.Fail("Missing cookie"));
+            }
 
-            var identity = new ClaimsIdentity(claims, Scheme.Name);
-            var principal = new ClaimsPrincipal(identity);
+            var accessToken = Request.Cookies["TwitchManagerAuth"];
+
+            var principal = TwitchManagerClaimPrincipalFactory.CreatePrincipal(accessToken, "", "local", "", true);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
             return Task.FromResult(AuthenticateResult.Success(ticket));

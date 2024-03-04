@@ -29,56 +29,71 @@
                     <CultureSelector />
                 </div>
             </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <RadzenLabel>
-                        @Localizer["DbConnectionString"]
-                    </RadzenLabel>
-                    <RadzenTextArea @bind-Value="_model.FilePath" class="form-control" Name="DbConnectionString" />
-                    <RadzenCustomValidator Component="DbConnectionString" Text="@Localizer["NotDirectoryError"]" Validator="() => !System.IO.Directory.Exists(_model.FilePath)" />
-                    <RadzenCustomValidator Component="DbConnectionString" Text="@string.Format(Localizer["InvalidDbFileExtesion"], Path.GetExtension(_model.FilePath))" Validator="@(() => Path.GetExtension(_model.FilePath) == ".db")" />
+            @if(WritableOptions.Value.ConfigType.HasValue && WritableOptions.Value.ConfigType.Value == ConfigType.StandAlone)
+            {
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <RadzenLabel>
+                            Modalità
+                        </RadzenLabel>
+                        <RadzenDropDown TValue="ConfigType?" Context="config" Data="Enum.GetValues<ConfigType>()" class="form-control" @bind-Value=_model.ConfigType>
+                            <Template>
+                                @(((ConfigType?)config)?.GetDisplayDescription())
+                            </Template>
+                        </RadzenDropDown>
+                    </div>
                 </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <RadzenLabel>
-                        @Localizer["ClientId"]
-                    </RadzenLabel>
-                    <RadzenTextBox @bind-Value="_model.ClientId" class="form-control" />
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <RadzenLabel>
+                            @Localizer["DbConnectionString"]
+                        </RadzenLabel>
+                        <RadzenTextArea @bind-Value="_model.FilePath" class="form-control" Name="DbConnectionString" />
+                        <RadzenCustomValidator Component="DbConnectionString" Text="@Localizer["NotDirectoryError"]" Validator="() => !System.IO.Directory.Exists(_model.FilePath)" />
+                        <RadzenCustomValidator Component="DbConnectionString" Text="@string.Format(Localizer["InvalidDbFileExtesion"], Path.GetExtension(_model.FilePath))" Validator="@(() => Path.GetExtension(_model.FilePath) == ".db")" />
+                    </div>
                 </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <RadzenLabel>
-                        @Localizer["ClientSecret"]
-                    </RadzenLabel>
-                    <RadzenTextBox @bind-Value="_model.ClientSecret" class="form-control" />
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <RadzenLabel>
+                            @Localizer["ClientId"]
+                        </RadzenLabel>
+                        <RadzenTextBox @bind-Value="_model.ClientId" class="form-control" />
+                    </div>
                 </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <RadzenLabel>
-                        @Localizer["BaseUrl"]
-                    </RadzenLabel>
-                    <RadzenTextBox @bind-Value="_model.BaseUrl" class="form-control" />
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <RadzenLabel>
+                            @Localizer["ClientSecret"]
+                        </RadzenLabel>
+                        <RadzenTextBox @bind-Value="_model.ClientSecret" class="form-control" />
+                    </div>
                 </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <RadzenLabel>
-                        @Localizer["TokenUrl"]
-                    </RadzenLabel>
-                    <RadzenTextBox @bind-Value="_model.TokenUrl" class="form-control" />
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <RadzenLabel>
+                            @Localizer["BaseUrl"]
+                        </RadzenLabel>
+                        <RadzenTextBox @bind-Value="_model.BaseUrl" class="form-control" />
+                    </div>
                 </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-12">
-                    <RadzenLabel>
-                        @Localizer["ClipDownloadPathLabel"]
-                    </RadzenLabel>
-                    <RadzenTextBox @bind-Value="_model.ClipDownloadPath" class="form-control" />
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <RadzenLabel>
+                            @Localizer["TokenUrl"]
+                        </RadzenLabel>
+                        <RadzenTextBox @bind-Value="_model.TokenUrl" class="form-control" />
+                    </div>
                 </div>
-            </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <RadzenLabel>
+                            @Localizer["ClipDownloadPathLabel"]
+                        </RadzenLabel>
+                        <RadzenTextBox @bind-Value="_model.ClipDownloadPath" class="form-control" />
+                    </div>
+                </div>
+            }
             <div class="row mt-3">
                 <div class="col-12 d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary">
@@ -113,6 +128,7 @@
             _model.BaseUrl = WritableOptions.Value.BaseUrl;
             _model.TokenUrl = WritableOptions.Value.TokenUrl;
             _model.ClipDownloadPath = WritableOptions.Value.ClipDownloadPath;
+            _model.ConfigType = WritableOptions.Value.ConfigType;
         }
         else
         {
@@ -130,6 +146,7 @@
             o.BaseUrl = _model.BaseUrl;
             o.TokenUrl = _model.TokenUrl;
             o.ClipDownloadPath = _model.ClipDownloadPath;
+            o.ConfigType = _model.ConfigType;
         });
 
         if(!File.Exists(_model.FilePath))
