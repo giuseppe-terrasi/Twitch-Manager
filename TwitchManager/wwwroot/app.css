@@ -260,3 +260,8 @@ table td {
     .dark-mode .rz-dialog-title {
         color: #FFFFFF;
     }
+
+.user-badge-id {
+    display: block;
+    font-size: 10px;
+}

@@ -17,7 +17,7 @@
     <HeadOutlet />
 </head>
 
-<body>
+<body onload="toggleLightMode(true)">
     <Routes />
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
@@ -52,14 +52,16 @@
                 darkMode = "true";
             }
 
+            var element = document.getElementById('main-container');
+
             if (darkMode === "true") {
 
-                document.body.classList.add("dark-mode");
+                element.classList.add("dark-mode");
                 document.getElementById("light-mode-icon").classList.add("ph-sun");
                 document.getElementById("light-mode-icon").classList.remove("ph-moon");
             }
             else {
-                document.body.classList.remove("dark-mode");
+                element.classList.remove("dark-mode");
                 document.getElementById("light-mode-icon").classList.remove("ph-sun");
                 document.getElementById("light-mode-icon").classList.add("ph-moon");
             }

@@ -34,6 +34,8 @@ builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.ConfigureWritable<ConfigData>(
     builder.Configuration.GetSection("Config"));
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddRadzenComponents();
 
 builder.Services.AddScoped<DialogService>();

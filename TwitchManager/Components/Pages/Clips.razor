@@ -1,8 +1,10 @@
 ﻿@page "/clips"
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.Extensions.Options
 @using TwitchManager.Components.Abstractions
 @using TwitchManager.Components.Popups
+@using TwitchManager.Helpers
 @using TwitchManager.Models.Clips
 @using TwitchManager.Models.General
 @using TwitchManager.Models.Streamers
@@ -12,6 +14,7 @@
 @inject IStreamerService StreamerService
 @inject IJSRuntime JSRuntime
 @inject DialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @rendermode InteractiveServerNotPrerendered
 
@@ -59,13 +62,13 @@
                         FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" SelectionMode="DataGridSelectionMode.Multiple" FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.And">
             <HeaderTemplate>
                 <div class="row">
-                    <div class="col-11 d-flex align-items-end">
+                    <div class="col-10 d-flex align-items-end">
                         <div class="pointer mb-1" @onclick="() => showFilter = !showFilter">
                             <h4 class="d-inline">@Localizer["FilterLabel"]</h4>
                             <i class="ph ph-caret-@(showFilter? "up" : "down") ms-2"></i>
                         </div>
                     </div>
-                    <div class="col-1">
+                    <div class="col-2">
                         <label class="d-block">@Localizer["ClipPerPageLabel"]</label>
                         <RadzenDropDown TValue="int" Data="new[] { 10, 20, 30, 50, 100 }" Value="pageSize"
                                         Change=" async (v)=> { pageSize = (int)v; await grid.Reload(); }" class="w-100" />
@@ -265,7 +268,9 @@
         await ExecuteAsync(async () =>
         {
             streamers = await StreamerService.GetAllAsync();
-            currentStreamer = streamers.FirstOrDefault();
+            var userId = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.GetUserId();
+            currentStreamer = streamers.Where(s => s.Id == userId).FirstOrDefault() ??
+                streamers.FirstOrDefault();
             await LoadClipsAsync(true);
         });
     }

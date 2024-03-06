@@ -28,7 +28,9 @@ namespace TwitchManager.Controllers
 
             var httpClient = new HttpClient();
 
-            var accesTokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://id.twitch.tv/oauth2/token")
+            var baseUrl = $"https://{HttpContext.Request.Host}";
+
+            var accesTokenRequest = new HttpRequestMessage(HttpMethod.Post, $"{optionsMonitor.CurrentValue.TokenUrl}/token")
             {
                 Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
@@ -36,7 +38,7 @@ namespace TwitchManager.Controllers
                     ["client_secret"] = optionsMonitor.CurrentValue.ClientSecret,
                     ["code"] = code,
                     ["grant_type"] = "authorization_code",
-                    ["redirect_uri"] = $"https://twitch-manager.giuseppe-terrasi.it/TwitchAuthentication"
+                    ["redirect_uri"] = $"{baseUrl}/TwitchAuthentication"
                 })
             };
 
@@ -49,7 +51,7 @@ namespace TwitchManager.Controllers
 
             var twitchToken = JsonSerializer.Deserialize<TwitchToken>(responseContent);
 
-            var userRequest = new HttpRequestMessage(HttpMethod.Get, "https://api.twitch.tv/helix/users");
+            var userRequest = new HttpRequestMessage(HttpMethod.Get, $"{optionsMonitor.CurrentValue.BaseUrl}users");
             userRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", twitchToken.AccessToken);
             userRequest.Headers.Add("Client-Id", optionsMonitor.CurrentValue.ClientId);
 

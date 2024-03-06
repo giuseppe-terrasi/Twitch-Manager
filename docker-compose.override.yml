@@ -12,6 +12,7 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - /c/Users/giuse/Downloads/Clips:/data
-      - /c/Users/giuse/Downloads/Clips/Download:/clips
-      - /c/Users/giuse/Downloads/Clips/Keys:/keys
+      - /F/TwitchManager:/data
+      - /F/TwitchManager/Clips/Download:/clips
+      - /F/TwitchManager/Clips/Keys:/keys
+      - /F/TwitchManager/Clips/appsettings.json:/app/appsettings.json

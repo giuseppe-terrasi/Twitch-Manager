@@ -18,7 +18,7 @@ namespace TwitchManager.Comunications.TwicthApi
         {
             if(string.IsNullOrEmpty(writableOptions.Value.Token) || writableOptions.Value.TokenExpiration < DateTime.Now)
             {
-                var tokenRequest = new HttpRequestMessage(HttpMethod.Post, writableOptions.Value.TokenUrl)
+                var tokenRequest = new HttpRequestMessage(HttpMethod.Post, writableOptions.Value.TokenUrl + "/token")
                 {
                     Content = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
