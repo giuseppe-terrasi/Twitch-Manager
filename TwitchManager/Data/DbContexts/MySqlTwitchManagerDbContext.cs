@@ -13,7 +13,10 @@ namespace TwitchManager.Data.DbContexts
             var connectionString = optionsMonitor.CurrentValue.DbConnectionString;
             var serverVersion = ServerVersion.AutoDetect(connectionString);
             optionsBuilder
-                .UseMySql(connectionString, serverVersion)
+                .UseMySql(connectionString, serverVersion, o =>
+                {
+                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                })
                 .EnableSensitiveDataLogging(true);
         }
     }

@@ -10,7 +10,10 @@ namespace TwitchManager.Data.DbContexts
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder
-            .UseSqlite(optionsMonitor.CurrentValue.DbConnectionString)
+            .UseSqlite(optionsMonitor.CurrentValue.DbConnectionString, o =>
+            {
+                o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            })
             .LogTo(Console.WriteLine, LogLevel.Information)
             .EnableSensitiveDataLogging(true);
         }

@@ -87,6 +87,26 @@ namespace TwitchManager.Migrations.Mysql
                     b.ToTable("Clips", (string)null);
                 });
 
+            modelBuilder.Entity("TwitchManager.Data.Domains.ClipVote", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ClipId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClipId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ClipVotes", (string)null);
+                });
+
             modelBuilder.Entity("TwitchManager.Data.Domains.Game", b =>
                 {
                     b.Property<string>("Id")
@@ -176,6 +196,26 @@ namespace TwitchManager.Migrations.Mysql
                     b.Navigation("Streamer");
                 });
 
+            modelBuilder.Entity("TwitchManager.Data.Domains.ClipVote", b =>
+                {
+                    b.HasOne("TwitchManager.Data.Domains.Clip", "Clip")
+                        .WithMany("ClipVotes")
+                        .HasForeignKey("ClipId");
+
+                    b.HasOne("TwitchManager.Data.Domains.User", "User")
+                        .WithMany("ClipVotes")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Clip");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TwitchManager.Data.Domains.Clip", b =>
+                {
+                    b.Navigation("ClipVotes");
+                });
+
             modelBuilder.Entity("TwitchManager.Data.Domains.Game", b =>
                 {
                     b.Navigation("Clips");
@@ -184,6 +224,11 @@ namespace TwitchManager.Migrations.Mysql
             modelBuilder.Entity("TwitchManager.Data.Domains.Streamer", b =>
                 {
                     b.Navigation("Clips");
+                });
+
+            modelBuilder.Entity("TwitchManager.Data.Domains.User", b =>
+                {
+                    b.Navigation("ClipVotes");
                 });
 #pragma warning restore 612, 618
         }

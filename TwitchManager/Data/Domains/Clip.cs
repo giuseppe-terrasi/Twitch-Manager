@@ -26,5 +26,7 @@
         public virtual Game Game { get; set; }
 
         public virtual Streamer Streamer { get; set; }
+
+        public virtual ICollection<ClipVote> ClipVotes { get; set; }
     }
 }
