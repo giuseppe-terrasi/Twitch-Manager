@@ -2,20 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TwitchManager.Data;
+using TwitchManager.Data.DbContexts;
 
 #nullable disable
 
-namespace TwitchManager.Migrations
+namespace TwitchManager.Migrations.Sqlite
 {
-    [DbContext(typeof(TwitchManagerDbContext))]
-    [Migration("20240216155947_Init")]
-    partial class Init
+    [DbContext(typeof(SqlLiteTwitchManagerDbContext))]
+    partial class SqlLiteTwitchManagerDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.2");

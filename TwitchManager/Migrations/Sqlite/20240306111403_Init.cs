@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TwitchManager.Migrations
+namespace TwitchManager.Migrations.Sqlite
 {
     /// <inheritdoc />
     public partial class Init : Migration

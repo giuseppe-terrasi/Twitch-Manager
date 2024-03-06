@@ -80,7 +80,7 @@
     {
         SetCurrent();
 
-        NavigationManager.LocationChanged += async (s, e) =>
+        NavigationManager.LocationChanged += (s, e) =>
         {
             SetCurrent();
         };

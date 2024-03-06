@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Net.Http;
 
 using TwitchManager.Comunications.TwicthApi.Api.Clips;
-using TwitchManager.Data;
+using TwitchManager.Data.DbContexts;
 using TwitchManager.Data.Domains;
 using TwitchManager.Models.Api.Clips.Data;
 using TwitchManager.Models.Streamers;

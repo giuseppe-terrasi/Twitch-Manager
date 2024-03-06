@@ -4,6 +4,7 @@
 @using TwitchManager.Auth.Attributes
 @using TwitchManager.Components.Abstractions
 @using TwitchManager.Data
+@using TwitchManager.Data.DbContexts
 @using TwitchManager.Helpers
 @using TwitchManager.Models.General
 
@@ -149,7 +150,7 @@
             o.ConfigType = _model.ConfigType;
         });
 
-        if(!File.Exists(_model.FilePath))
+        if(!File.Exists(_model.FilePath) && _model.ConfigType == ConfigType.StandAlone)
         {
             using var context = DbContextFactory.CreateDbContext();
             await context.Database.EnsureCreatedAsync();

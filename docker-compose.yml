@@ -6,3 +6,5 @@ services:
     build:
       context: .
       dockerfile: TwitchManager/Dockerfile
+  db:
+    image: mysql

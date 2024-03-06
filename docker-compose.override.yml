@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
   twitchmanager:
+    container_name: twitchmanager
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -16,3 +17,21 @@ services:
       - /F/TwitchManager/Clips/Download:/clips
       - /F/TwitchManager/Clips/Keys:/keys
       - /F/TwitchManager/Clips/appsettings.json:/app/appsettings.json
+    networks:
+      - twichmanager-network
+  db:
+    container_name: twitchmanager-db
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin-test
+      - MYSQL_DATABASE=twitchmanager
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - twichmanager-network
+networks:
+  twichmanager-network:
+    driver: bridge
+volumes:
+  db-data:

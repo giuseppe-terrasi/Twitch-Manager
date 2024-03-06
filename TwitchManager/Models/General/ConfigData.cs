@@ -10,7 +10,25 @@ namespace TwitchManager.Models.General
 
     public class ConfigData
     {
-        public string DbConnectionString { get; set; }
+        string _dbConnectionString;
+        public string DbConnectionString {
+            get
+            {
+                if(string.IsNullOrEmpty(_dbConnectionString))
+                {
+                    return "";
+                }
+                else if(_dbConnectionString.Contains("Data Source=") && ConfigType == General.ConfigType.Web)
+                {
+                    return _dbConnectionString.Replace("Data Source=", "").Replace(@"\\", @"\");
+                }
+                else
+                {
+                    return _dbConnectionString;
+                }
+            }
+            set => _dbConnectionString = value;
+        }
 
         public string ClientId { get; set; }
 
@@ -49,12 +67,16 @@ namespace TwitchManager.Models.General
             }
             set
             {
-                DbConnectionString = $"Data Source={value}";
+                if(ConfigType == General.ConfigType.StandAlone)
+                {
+                    DbConnectionString = $"Data Source={value}";
+                }
             }
         }
 
         public bool IsConfigured() =>
-            !string.IsNullOrEmpty(FilePath) && !string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret) && !string.IsNullOrEmpty(TokenUrl) && !string.IsNullOrEmpty(BaseUrl)
+            ((ConfigType == General.ConfigType.StandAlone && !string.IsNullOrEmpty(FilePath)) || ConfigType == General.ConfigType.Web) 
+            && !string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(ClientSecret) && !string.IsNullOrEmpty(TokenUrl) && !string.IsNullOrEmpty(BaseUrl)
             && !string.IsNullOrEmpty(ClipDownloadPath) && ConfigType.HasValue;
     }
 }

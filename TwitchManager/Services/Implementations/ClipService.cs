@@ -6,7 +6,7 @@ using System.Linq.Dynamic.Core;
 using TwitchManager.Comunications.TwicthApi.Api.Clips;
 using TwitchManager.Comunications.TwicthApi.Api.Games;
 using TwitchManager.Comunications.TwitchGQL.Clips;
-using TwitchManager.Data;
+using TwitchManager.Data.DbContexts;
 using TwitchManager.Data.Domains;
 using TwitchManager.Models.Clips;
 using TwitchManager.Services.Abstractions;
