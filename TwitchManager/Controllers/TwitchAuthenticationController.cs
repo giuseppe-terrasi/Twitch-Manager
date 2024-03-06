@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 using System.Net.Http.Headers;
@@ -8,14 +8,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using TwitchManager.Auth;
-using TwitchManager.Models.Api.Clips.Data;
+using TwitchManager.Data.DbContexts;
+using TwitchManager.Data.Domains;
 using TwitchManager.Models.Api.Clips.Responses;
 using TwitchManager.Models.General;
 
 namespace TwitchManager.Controllers
 {
     [Route("[controller]")]
-    public class TwitchAuthenticationController(IOptionsMonitor<ConfigData> optionsMonitor) : Controller
+    public class TwitchAuthenticationController(IOptionsMonitor<ConfigData> optionsMonitor, IDbContextFactory<TwitchManagerDbContext> dbContextFactory) : Controller
     {
 
         [HttpGet]
@@ -62,6 +63,22 @@ namespace TwitchManager.Controllers
 
             var userResponseContent = await userResponse.Content.ReadAsStringAsync();
             var user = JsonSerializer.Deserialize<StreamerDataResponseModel>(userResponseContent)?.Data.FirstOrDefault();
+
+            var dbContext = await dbContextFactory.CreateDbContextAsync();
+            var existingUser = await dbContext.Users.Where(u => u.TwitchId == user.Id).FirstOrDefaultAsync();
+
+            if(existingUser == null)
+            {
+                existingUser = new User
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    TwitchId = user.Id,
+                    CreatedOn = DateTime.UtcNow,
+                };
+
+                await dbContext.Users.AddAsync(existingUser);
+                await dbContext.SaveChangesAsync();
+            }
 
             var isAdmin = optionsMonitor.CurrentValue.AdminUsers.Contains(user.Id);
 

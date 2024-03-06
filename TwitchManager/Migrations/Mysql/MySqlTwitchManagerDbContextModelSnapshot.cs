@@ -143,6 +143,24 @@ namespace TwitchManager.Migrations.Mysql
                     b.ToTable("Streamers", (string)null);
                 });
 
+            modelBuilder.Entity("TwitchManager.Data.Domains.User", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TwitchId")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TwitchId");
+
+                    b.ToTable("Users", (string)null);
+                });
+
             modelBuilder.Entity("TwitchManager.Data.Domains.Clip", b =>
                 {
                     b.HasOne("TwitchManager.Data.Domains.Streamer", "Streamer")

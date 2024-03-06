@@ -13,6 +13,8 @@ namespace TwitchManager.Data.DbContexts
 
         public DbSet<Streamer> Streamers { get; set; }
 
+        public DbSet<User> Users { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
