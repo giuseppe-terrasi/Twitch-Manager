@@ -21,6 +21,7 @@ using TwitchManager.Helpers;
 using TwitchManager.Models.General;
 using TwitchManager.Services.Abstractions;
 using TwitchManager.Services.Implementations;
+using AutoMapper.Extensions.ExpressionMapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +33,10 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo("/keys"))
     .SetApplicationName("TwitchManager");
 
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+builder.Services.AddAutoMapper(cfg => 
+{ 
+    cfg.AddExpressionMapping(); 
+}, Assembly.GetExecutingAssembly());
 
 builder.Services.ConfigureWritable<ConfigData>(
     builder.Configuration.GetSection("Config"));

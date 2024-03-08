@@ -1,0 +1,90 @@
+﻿@using Microsoft.Extensions.Localization
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Components.Popups
+@using TwitchManager.Models.Clips
+@using TwitchManager.Translations
+@inject DialogService DialogService
+@inherits BaseComponent
+
+<div class="row">
+    <Virtualize TItem="ClipModel" Items="Clips" Context="clip" OverscanCount="5">
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3 mt-3 position-relative">
+            <div class="card d-flex justify-content-between h-100 clip-card">
+                <div class="row">
+                    <div class="col-12">
+                        <img src="@clip.ThumbnailUrl" class="img-fluid pointer" @onclick="async () => await OpenAsync(clip)" />
+                        <RadzenCheckBox TValue="bool" class="clip-selection-checkbox" Value="selectedClips.Contains(clip)" Change="async () => await SelectClipAsync(clip)"/>
+                    </div>
+                </div>
+                <div class="row mt-1">
+                    <div class="col-12 px-4 d-flex justify-content-between">
+                        <small>@clip.Title</small>
+                        <button type="button" class="btn btn-link text-decoration-none text-black p-0" @onclick="async () => await DownloadRequested.InvokeAsync(clip)">
+                            <i class="ph ph-download-simple grid-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 px-4 d-flex justify-content-start">
+                        <small class="user-badge-id">@(clip.CreatedAt.ToString())</small>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 px-4 pb-2 d-flex justify-content-between">
+                        <span class="d-flex align-items-start">
+                            <i class="ph ph-heart pointer me-2 @(clip.IsUserVoted ? "fill" : "") grid-icon" @onclick="() => Vote(clip)"></i> 
+                            @Localizer["LikesLabel"]: @clip.Votes
+                        </span>
+                        <span>by @clip.CreatorName</span>
+                    </div>
+                </div>
+            </div>
+            <i class="ph ph-play clip-play"></i>
+        </div>
+    </Virtualize>
+</div>
+
+
+@code {
+    [Parameter]
+    public ICollection<ClipModel> Clips { get; set; }
+
+    [Parameter]
+    public EventCallback<ClipModel> VoteRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<ClipModel> DownloadRequested { get; set; }
+
+    [Parameter]
+    public EventCallback<IList<ClipModel>> SelectedClipsChanged { get; set; }
+
+    private IList<ClipModel> selectedClips = new List<ClipModel>();
+
+    private void Vote(ClipModel clip)
+    {
+        clip.Vote();
+        VoteRequested.InvokeAsync(clip).ConfigureAwait(false);
+    }
+
+    private async Task OpenAsync(ClipModel clipModel)
+    {
+        await DialogService.OpenAsync<ShowClipPopup>("", new Dictionary<string, object>()
+        {
+            { "Clip", clipModel }, { "DialogService", DialogService }, 
+            { "DownloadRequested", EventCallback.Factory.Create(this, async () => await DownloadRequested.InvokeAsync(clipModel)) }
+        });
+    }
+
+    private async Task SelectClipAsync(ClipModel clip)
+    {
+        if (selectedClips.Contains(clip))
+        {
+            selectedClips.Remove(clip);
+        }
+        else
+        {
+            selectedClips.Add(clip);
+        }
+        await SelectedClipsChanged.InvokeAsync(selectedClips);
+    }
+}

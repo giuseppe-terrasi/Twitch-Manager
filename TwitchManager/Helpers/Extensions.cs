@@ -14,6 +14,11 @@ namespace TwitchManager.Helpers
             return principal.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
         }
 
+        public static string GetUserTwitchId(this ClaimsPrincipal principal)
+        {
+            return principal.Claims.FirstOrDefault(c => c.Type == "twitchId")?.Value;
+        }        
+
         public static string GetUsername(this ClaimsPrincipal principal)
         {
             return principal.Claims.FirstOrDefault(c => c.Type == "username")?.Value;

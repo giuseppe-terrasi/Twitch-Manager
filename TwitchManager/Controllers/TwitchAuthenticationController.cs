@@ -62,17 +62,17 @@ namespace TwitchManager.Controllers
                 return BadRequest("Failed to get user");
 
             var userResponseContent = await userResponse.Content.ReadAsStringAsync();
-            var user = JsonSerializer.Deserialize<StreamerDataResponseModel>(userResponseContent)?.Data.FirstOrDefault();
+            var twitchUser = JsonSerializer.Deserialize<StreamerDataResponseModel>(userResponseContent)?.Data.FirstOrDefault();
 
             var dbContext = await dbContextFactory.CreateDbContextAsync();
-            var existingUser = await dbContext.Users.Where(u => u.TwitchId == user.Id).FirstOrDefaultAsync();
+            var existingUser = await dbContext.Users.Where(u => u.TwitchId == twitchUser.Id).FirstOrDefaultAsync();
 
             if(existingUser == null)
             {
                 existingUser = new User
                 {
                     Id = Guid.NewGuid().ToString(),
-                    TwitchId = user.Id,
+                    TwitchId = twitchUser.Id,
                     CreatedOn = DateTime.UtcNow,
                 };
 
@@ -80,9 +80,9 @@ namespace TwitchManager.Controllers
                 await dbContext.SaveChangesAsync();
             }
 
-            var isAdmin = optionsMonitor.CurrentValue.AdminUsers.Contains(user.Id);
+            var isAdmin = optionsMonitor.CurrentValue.AdminUsers.Contains(twitchUser.Id);
 
-            var principal = TwitchManagerClaimPrincipalFactory.CreatePrincipal(twitchToken.AccessToken, user.Id, user.DisplayName, user.ProfileImageUrl, isAdmin);
+            var principal = TwitchManagerClaimPrincipalFactory.CreatePrincipal(twitchToken.AccessToken, twitchUser.Id, existingUser.Id, twitchUser.DisplayName, twitchUser.ProfileImageUrl, isAdmin);
 
             await HttpContext.SignInAsync(TwitchManagerAuthenticationOptions.AuthenticationScheme, principal);
 

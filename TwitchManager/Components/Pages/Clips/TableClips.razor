@@ -1,0 +1,94 @@
+﻿@using Microsoft.Extensions.Localization
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Models.Clips
+@using TwitchManager.Models.Streamers
+@using TwitchManager.Translations
+
+@inherits BaseComponent
+
+<RadzenDataGrid Data="@Clips" TItem="ClipModel" PagerPosition="PagerPosition.Bottom" AllowPaging="false" AllowSorting="false" AllowFiltering=false @ref=grid
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" SelectionMode="DataGridSelectionMode.Multiple" FilterMode="FilterMode.Simple" LogicalFilterOperator="LogicalFilterOperator.And"
+>
+    <Columns>
+        <RadzenDataGridColumn TItem="ClipModel" Sortable="false" Filterable="false" Width="50px">
+            <HeaderTemplate>
+                <RadzenCheckBox TriState="false" TValue="bool?" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Select all items" }})"
+                                Value="@(selectedClips?.Any() != true ? false : !Clips.All(i => selectedClips.Contains(i)) ? null : Clips.Any(i => selectedClips.Contains(i)))"
+                                Change="@(async args => { selectedClips = args == true ? Clips.ToList() : new List<ClipModel>(); await SelectedClipsChanged.InvokeAsync(selectedClips); })" />
+            </HeaderTemplate>
+            <Template Context="data">
+                <RadzenCheckBox TriState="false" Value="@(selectedClips != null && selectedClips.Contains(data))" InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Select item" }})"
+                                TValue="bool" Change=@(args => { if(args) selectedClips.Add(data); else {selectedClips.Remove(data); StateHasChanged();} }) />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ClipModel" Title="Image" Filterable=false Reorderable=false Sortable=false Context="clip">
+            <Template>
+                <img src="@clip.ThumbnailUrl" class="img-fluid" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.CreatedAt))" Title="Creata il" Context="clip" FilterOperator="FilterOperator.Custom">
+            <Template>
+                @DateTime.SpecifyKind(clip.CreatedAt, DateTimeKind.Utc).ToLocalTime().ToString()
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.Title))" Title="@Localizer["TitleLabel"]" FilterOperator="FilterOperator.Custom"></RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.ViewCount))" Title="@Localizer["ViewCountLabel"]" Filterable=false />
+        <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.Votes))" Title="@Localizer["LikesLabel"]" Filterable=false />
+        <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.IsUserVoted))" Title="@Localizer["LikedLabel"]" Filterable=false Context="clip">
+            <Template>
+                <button type="button" class="btn btn-link text-decoration-none text-black p-0">
+                    <i class="ph ph-heart @(clip.IsUserVoted ? "fill" : "") grid-icon" @onclick="() => Vote(clip)"></i>
+                </button>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.GameName))" Title="@Localizer["GameNameLabel"]" FilterOperator="FilterOperator.Custom">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ClipModel" Property="@(nameof(ClipModel.CreatorName))" Title="@Localizer["CreatorNameLabel"]" FilterOperator="FilterOperator.Custom">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ClipModel" Title="@Localizer["ActionsLabel"]" Context="clip" Filterable=false Reorderable=false Sortable=false TextAlign="TextAlign.Center">
+            <Template>
+                <div class="d-flex justify-content-center align-items-center">
+                    <a href="/show-clip/@clip.Id" target="_blank" class="text-decoration-none text-black">
+                        <i class="ph ph-eye grid-icon"></i>
+                    </a>
+                    <a href="@clip.Url" target="_blank" class="text-decoration-none text-black">
+                        <i class="ph ph-arrow-square-out grid-icon mx-3"></i>
+                    </a>
+                    <button type="button" class="btn btn-link text-decoration-none text-black p-0" >
+                        <i class="ph ph-download-simple grid-icon"></i>
+                    </button>
+                </div>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+
+    [Parameter]
+    public IEnumerable<ClipModel> Clips { get; set; }
+
+    [Parameter]
+    public EventCallback<IList<ClipModel>> SelectedClipsChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> FilteredCountChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<ClipModel> VoteRequested { get; set; }
+
+    RadzenDataGrid<ClipModel> grid;
+
+    private IList<ClipModel> selectedClips = new List<ClipModel>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await FilteredCountChanged.InvokeAsync(grid.View.Count());
+    }
+
+    private void Vote(ClipModel clip)
+    {
+        clip.Vote();
+        VoteRequested.InvokeAsync(clip).ConfigureAwait(false);
+    }
+}

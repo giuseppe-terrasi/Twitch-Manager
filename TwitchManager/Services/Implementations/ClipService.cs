@@ -1,30 +1,49 @@
 ﻿using AutoMapper;
+using AutoMapper.Extensions.ExpressionMapping;
+
 using Microsoft.EntityFrameworkCore;
 
+using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 
 using TwitchManager.Comunications.TwicthApi.Api.Clips;
 using TwitchManager.Comunications.TwicthApi.Api.Games;
 using TwitchManager.Comunications.TwitchGQL.Clips;
 using TwitchManager.Data.DbContexts;
 using TwitchManager.Data.Domains;
+using TwitchManager.Helpers;
 using TwitchManager.Models.Clips;
+using TwitchManager.Models.Streamers;
 using TwitchManager.Services.Abstractions;
 
 namespace TwitchManager.Services.Implementations
 {
-    public partial class ClipService(IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IMapper mapper, IHttpClientFactory httpClientFactory) : IClipService
+    public partial class ClipService(ILogger<ClipService> logger, IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IMapper mapper,
+        IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : IClipService
     {
-        public async Task<IEnumerable<ClipModel>> GetAllAsync()
+        public async Task<ICollection<ClipModel>> GetAllAsync()
         {
             var context = await dbContextFactory.CreateDbContextAsync();
+            var userId = httpContextAccessor.HttpContext.User.GetUserId();
 
             var clips = await context.Clips
                 .Include(c => c.Game)
-                .Select(c => mapper.Map<ClipModel>(c))
+                .Include(c => c.ClipVotes)
+                .Select(c => mapper.Map<ClipModel>(c, opt => SetVotesInfo(opt, userId)))
                 .ToListAsync();
 
             return clips;
+        }
+
+        private static void SetVotesInfo(IMappingOperationOptions<object, ClipModel> opt, string userId)
+        {
+            opt.AfterMap((src, dest) =>
+            {
+                var clip = (Clip)src;
+                dest.IsUserVoted = clip.ClipVotes.Any(v => v.UserId == userId);
+                dest.Votes = clip.ClipVotes.Count;
+            });
         }
 
         public async Task<string> GetDownloadLinkAsync(string cliId, CancellationToken cancellationToken)
@@ -41,11 +60,13 @@ namespace TwitchManager.Services.Implementations
         public async Task<ClipModel> GetByIdAsync(string id)
         {
             var context = await dbContextFactory.CreateDbContextAsync();
+            var userId = httpContextAccessor.HttpContext.User.GetUserId();
 
             var clip = await context.Clips
                 .Include(c => c.Game)
-                .Where(c => c.Id == id) 
-                .Select(c => mapper.Map<ClipModel>(c))
+                .Include(c => c.ClipVotes)
+                .Where(c => c.Id == id)
+                .Select(c => mapper.Map<ClipModel>(c, opt => SetVotesInfo(opt, userId)))
                 .FirstOrDefaultAsync();
 
             return clip;
@@ -123,17 +144,137 @@ namespace TwitchManager.Services.Implementations
             
         }
 
-        public async Task<IEnumerable<ClipModel>> GetByStreamerAsync(string streamerId)
+        public async Task<ClipFilterResultModel> GetByStreamerAsync(ClipFilterModel filterModel, CancellationToken cancellationToken = default)
+        {
+            var result = new ClipFilterResultModel();
+            try
+            {
+
+                var (clips, total) = await Task.Run(() =>
+                {
+                    var context = dbContextFactory.CreateDbContext();
+                    var userId = httpContextAccessor.HttpContext.User.GetUserId();
+
+                    var query = context.Clips
+                        .Where(c => c.BroadcasterId == filterModel.StreamerId)
+                        .UseAsDataSource(mapper).For<ClipModel>()
+                        .OnEnumerated(c =>
+                        {
+                            foreach(var clip in c.Cast<ClipModel>())
+                            {
+                                clip.IsUserVoted = context.ClipVotes.Any(v => v.ClipId == clip.Id && v.UserId == userId);
+                            }
+                        })
+                        .AsQueryable();
+
+                    if (filterModel.Filters != null)
+                    {
+                        foreach (var filter in filterModel.Filters)
+                        {
+                            query = query.Where(filter);
+                        }
+                    }
+
+                    var total = query.Count(); 
+
+                    if (!string.IsNullOrEmpty(filterModel.OrderBy))
+                    {
+                        query = query.OrderBy(filterModel.OrderBy);
+                    }
+
+                    var clips = query.Skip(filterModel.Skip).Take(filterModel.Take).ToList();
+
+                    return (clips, total);
+                }, cancellationToken);
+
+                result.Clips = clips;   
+                result.FilteredTotal = total;
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Error while getting clips");
+            }
+
+            return result;
+
+        }
+
+        public async Task VoteAsync(string clipId, bool isUpVote)
         {
             var context = await dbContextFactory.CreateDbContextAsync();
 
-            var clips = await context.Clips
-                .Include(c => c.Game)
+            var userId = httpContextAccessor.HttpContext.User.GetUserId();
+           
+            if(isUpVote)
+            {
+                var upVote = new ClipVote
+                {
+                    Id = Guid.NewGuid().ToString(), 
+                    ClipId = clipId,
+                    UserId = userId
+                };
+
+                context.ClipVotes.Add(upVote);
+            }
+            else
+            {
+                var vote = await context.ClipVotes
+                    .Where(v => v.ClipId == clipId && v.UserId == userId)
+                    .FirstOrDefaultAsync();
+
+                if(vote != null)
+                {
+                    context.ClipVotes.Remove(vote);
+                }
+            }
+
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch(Exception e)
+            {
+                logger.LogError(e, "Error while voting");  
+                throw new Exception("Error while voting", e);
+            }
+
+        }
+
+        public async Task<int> GetTotalByStremaerAsync(string streamerId)
+        {
+            var context = await dbContextFactory.CreateDbContextAsync();
+
+            var total = await context.Clips
                 .Where(c => c.BroadcasterId == streamerId)
-                .Select(c => mapper.Map<ClipModel>(c))
+                .CountAsync();
+
+            return total;
+        }
+
+        public async Task<ICollection<string>> GetCreatorsByStremaerAsync(string streamerId)
+        {
+            var context = await dbContextFactory.CreateDbContextAsync();
+
+            var creators = await context.Clips
+                .Where(c => c.BroadcasterId == streamerId)
+                .Select(c => c.CreatorName)
+                .Distinct()
                 .ToListAsync();
 
-            return clips;
+            return creators;
+        }
+
+        public async Task<ICollection<string>> GetGamesByStremaerAsync(string streamerId)
+        {
+            var context = await dbContextFactory.CreateDbContextAsync();
+
+            var games = await context.Clips
+                .Where(c => c.BroadcasterId == streamerId)
+                .Select(c => c.Game.Name)
+                .Distinct()
+                .ToListAsync();
+
+            return games;
         }
     }
 }

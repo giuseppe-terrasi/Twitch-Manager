@@ -16,7 +16,9 @@ namespace TwitchManager.Data.DbContexts
                 .UseMySql(connectionString, serverVersion, o =>
                 {
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    o.EnableStringComparisonTranslations();
                 })
+                .LogTo(Console.WriteLine, LogLevel.Information)
                 .EnableSensitiveDataLogging(true);
         }
     }

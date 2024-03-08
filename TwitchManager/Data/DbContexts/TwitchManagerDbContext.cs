@@ -15,6 +15,8 @@ namespace TwitchManager.Data.DbContexts
 
         public DbSet<User> Users { get; set; }
 
+        public DbSet<ClipVote> ClipVotes { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());

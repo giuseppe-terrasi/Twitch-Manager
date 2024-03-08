@@ -28,6 +28,9 @@
     <div class="row">
         <div class="col-12">
             <span>@Localizer["CurrentClipLabel"]: @current</span>
+            <div class="spinner-border" role="status" style="position: relative; left: 15px; top: 5px;color: #6441A5;">
+                <span class="sr-only"></span>
+            </div>
         </div>
     </div>
 }
@@ -73,7 +76,16 @@
 
         if(configType == ConfigType.Web)
         {
-            await JSRuntime.InvokeVoidAsync("getDownloadDir");
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("getDownloadDir");
+            }
+            catch
+            {
+                Cancel();
+                return;
+            }
+            
         }
 
         foreach (var clip in Clips)
@@ -84,7 +96,12 @@
 
             try
             {
-                var downloadLink = await ClipService.GetDownloadLinkAsync(clip.Id, cancellationTokenSource.Token);
+                var downloadLink = clip.VideoUrl;
+
+                if(string.IsNullOrEmpty(downloadLink))
+                {
+                    downloadLink = await ClipService.GetDownloadLinkAsync(clip.Id, cancellationTokenSource.Token);
+                }
 
                 if (!string.IsNullOrEmpty(downloadLink))
                 {
@@ -92,7 +109,7 @@
                     var response = await httpClient.GetStreamAsync(downloadLink, cancellationTokenSource.Token);
                     if(configType == ConfigType.Web)
                     {
-                        using var streamRef = new DotNetStreamReference(stream: response, leaveOpen: true);
+                        var streamRef = new DotNetStreamReference(stream: response, leaveOpen: true);
                         await JSRuntime.InvokeVoidAsync("saveFile", streamRef, $"{clip.Id}.mp4");
                     }
                     else

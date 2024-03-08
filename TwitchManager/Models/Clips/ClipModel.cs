@@ -20,5 +20,16 @@
         public double Duration { get; set; }
         public int? VodOffset { get; set; }
         public bool IsFeatured { get; set; }
+        public bool IsUserVoted { get; set; }
+
+        public int Votes { get; set; }
+
+        public string VideoUrl { get; set; }
+
+        public void Vote()
+        {
+            IsUserVoted = !IsUserVoted;
+            Votes += IsUserVoted ? 1 : -1;
+        }
     }
 }

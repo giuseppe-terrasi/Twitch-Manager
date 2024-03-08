@@ -17,6 +17,8 @@ namespace TwitchManager.Data.Configurations
             builder.HasOne(c => c.Streamer)
                 .WithMany(g => g.Clips)
                 .HasForeignKey(c => c.BroadcasterId);
+
+            builder.Property(c => c.CreatedAt).HasConversion(v => DateTime.SpecifyKind(v, DateTimeKind.Local).ToUniversalTime(),v => DateTime.SpecifyKind(v, DateTimeKind.Utc).ToLocalTime());
         }
     }
 }

@@ -14,6 +14,7 @@
     <link rel="icon" type="image/x-icon" href="img/favicon.ico?v1">
     <template id="phosphor-links" data-permanent>
     </template>
+    <title>Twitch Manager</title>
     <HeadOutlet />
 </head>
 
@@ -41,7 +42,7 @@
         }
 
         function toggleLightMode(init) {
-            
+            return;
             var darkMode = localStorage.getItem("TwitchManager-darkMode") || "false";
 
             if (!init && darkMode === "true") {
@@ -82,7 +83,7 @@
             //const file = new Blob([stream], { type: "text/plain" });
             const handle = await window.downloadDir.getFileHandle(filename, { create: true });
             const writable = await handle.createWritable();
-            stream.pipeTo(writable);
+            await stream.pipeTo(writable);
             //await writable.close();
         }
     </script>

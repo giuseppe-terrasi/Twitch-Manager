@@ -1,0 +1,443 @@
+﻿@page "/clips"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Options
+@using System.Linq.Expressions
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Components.Popups
+@using TwitchManager.Helpers
+@using TwitchManager.Models.Clips
+@using TwitchManager.Models.General
+@using TwitchManager.Models.Streamers
+@using TwitchManager.Services.Abstractions
+
+@inject IClipService ClipService
+@inject IStreamerService StreamerService
+@inject IJSRuntime JSRuntime
+@inject DialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@rendermode InteractiveServerNotPrerendered
+
+@inherits BaseComponent
+
+@attribute [Authorize]
+
+<PageTitle>@Localizer["ClipPageTitle"]</PageTitle>
+
+<div class="row page-title">
+    <div class="col-8">
+        <h1>
+            @Localizer["ClipPageTitle"]
+        </h1>
+    </div>
+    <div class="col-4 d-flex justify-content-end align-items-center">
+        <RadzenLabel class="me-3">@Localizer["StreamerLabel"]:</RadzenLabel>
+        <RadzenDropDown Data="streamers" TValue="StreamerModel" @bind-Value=currentStreamer Context="streamer" Change="async () => await LoadClipsAsync(false)">
+            <Template>
+                <div class="d-flex align-items-center justify-content-start">
+                    <img src="@(((StreamerModel)streamer).ProfileImageUrl)" class="img-fluid me-2" style="height: 25px"/>
+                    <span>@(((StreamerModel)streamer).DisplayName)</span>
+                </div>
+            </Template>
+            <EmptyTemplate>
+                @Localizer["NoStreamerImportedLabel"]
+            </EmptyTemplate>
+        </RadzenDropDown>
+    </div>
+</div>
+<Microsoft.AspNetCore.Components.Authorization.CascadingAuthenticationState>
+    <Microsoft.AspNetCore.Components.Authorization.AuthorizeView Roles="Admin">
+        <Authorized>
+            <button class="btn btn-link text-decoration-none d-flex justify-content-center align-items-center text-black ps-0" @onclick="async () => await SyncWithTwitchAsync()">
+                @Localizer["SyncLabel"] <i class="ph ph-arrows-clockwise ms-2"></i>
+            </button>
+        </Authorized>
+    </Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
+</Microsoft.AspNetCore.Components.Authorization.CascadingAuthenticationState>
+
+<div class="row">
+    <div class="col-10 d-flex align-items-end">
+        <div class="pointer mb-1" @onclick="() => showFilter = !showFilter">
+            <h4 class="d-inline">@Localizer["FilterLabel"]</h4>
+            <i class="ph ph-caret-@(showFilter? "up" : "down") ms-2"></i>
+        </div>
+    </div>
+    <div class="col-2">
+        <label class="d-block">@Localizer["ClipPerPageLabel"]</label>
+        <RadzenDropDown TValue="int" Data="new[] { 12, 24, 36, 48, 100 }" Value="pageSize"
+                        Change=" async (v)=> { pageSize = (int)v; await ApplyFilterClipsAsync();}" class="w-100" />
+    </div>
+</div>
+@if (showFilter)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="row">
+                <div class="col-2">
+                    <label class="d-block">@Localizer["ClipCreatedFromLabel"]</label>
+                    <RadzenDatePicker @bind-Value="fromDate" DateFormat="d" Change="() => FilterClips()" AllowClear=true class="w-100">
+                    </RadzenDatePicker>
+                </div>
+                <div class="col-2">
+                    <label class="d-block">@Localizer["ClipCreatedToLabel"]</label>
+                    <RadzenDatePicker @bind-Value="toDate" DateFormat="d" Change="() => FilterClips()" AllowClear=true class="w-100" />
+                </div>
+                <div class="col-4">
+                    <label class="d-block">@Localizer["GameNameLabel"]</label>
+                    <RadzenDropDown TValue="List<string>" Data="games" @bind-Value=selectedGames AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Multiple=true
+                                    Change="() => FilterClips()" class="w-100" AllowClear=true AllowVirtualization=true />
+                </div>
+                <div class="col-4">
+                    <label class="d-block">@Localizer["CreatorNameLabel"]</label>
+                    <RadzenDropDown TValue="List<string>" Data="creators" @bind-Value=selectedCreators AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Multiple=true
+                                    Change="() => FilterClips()" class="w-100" AllowClear=true AllowVirtualization=true />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12">
+            <label class="d-block">@Localizer["TitleLabel"]</label>
+            <RadzenTextBox class="w-100" @oninput="(v)=> {filterTitle = v.Value.ToString(); FilterClips(); }" />
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12 d-flex">
+            <div class="me-3">
+                <label>Ordina per</label>
+                <RadzenDropDown TValue="string" Data="orderByColumns" @bind-Value="orderBy" ValueProperty="Key" TextProperty="Value" Change="async () => await ApplyFilterClipsAsync()">
+                    <Template>
+                        <div class="d-flex align-items-center">
+                            <span>@(((KeyValuePair<string, string>)context).Value)</span>
+                        </div>
+                    </Template>
+                </RadzenDropDown>
+            </div>
+            <button class="btn btn-primary d-flex justify-content-center align-items-center" @onclick="async () => await ApplyFilterClipsAsync()">
+                Applica filtri
+            </button>
+        </div>
+    </div>
+}
+<div class="row mt-3">
+    <div class="col-6 d-flex justify-content-start align-items-center">
+        <div class="d-flex justify-content-start align-items-center">
+            <span>
+                @Localizer["TotalsLabel"]: <b class="mx-1">@totalCount</b>
+                @Localizer["FilteredLabel"]: <b class="mx-1">@filteredCount</b>
+            </span>
+            <label class="ms-3 mb-0">@Localizer["ShowAsTableLabel"]</label>
+            <RadzenSwitch @bind-Value=showTable class="ms-2"/>
+        </div>
+    </div>
+    <div class="col-6 d-flex justify-content-end align-items-center">
+        <button class="btn btn-primary d-flex justify-content-center align-items-center" disabled="@(selectedClips.Count == 0)" @onclick="async () => await DownloadSelectedAsync()">
+            @Localizer["DownloadSelectedLabel"] <i class="ph ph-download-simple ms-3"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 table-responsive">
+        @if(showTable)
+        {
+            <div class="mt-3">
+                <TableClips Clips="clips" SelectedClipsChanged="(selected) => selectedClips = selected" VoteRequested="(v) => Vote(v)" />
+            </div>
+        }
+        else
+        {
+            <CardClips Clips="clips" VoteRequested="(v) => Vote(v)" DownloadRequested="async (clip) => await DownloadAsync(clip)" SelectedClipsChanged="(selected) => selectedClips = selected" />
+        }
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <RadzenPager Count="filteredCount" PageSize="pageSize" PageChanged="async (args) => { skip = args.Skip; await ApplyFilterClipsAsync(); }" />
+    </div>
+</div>
+@code {
+
+    private ICollection<ClipModel> clips = new List<ClipModel>();
+    private IList<ClipModel> selectedClips = new List<ClipModel>();
+    // private IList<RadzenDataGridColumn<ClipModel>> gridColumns = new List<RadzenDataGridColumn<ClipModel>>();
+
+    private IEnumerable<StreamerModel> streamers = new List<StreamerModel>();
+
+    private StreamerModel currentStreamer = null;
+
+    DateTime? fromDate;
+    DateTime? toDate;
+
+    List<string> selectedGames = new();
+    List<string> selectedCreators = new();
+    string filterTitle = "";
+
+    IEnumerable<string> games = null;
+    IEnumerable<string> creators = null;
+    ICollection<Expression<Func<ClipModel, bool>>> filters = new List<Expression<Func<ClipModel, bool>>>();
+
+    int pageSize = 12;
+
+    bool showFilter = true;
+    int totalCount = 0;
+    int filteredCount = 0;
+    int skip = 0;
+    bool showTable = false;
+
+    CancellationTokenSource ct = null;
+
+    string orderBy = "CreatedAt Desc";
+
+    Dictionary<string, string> orderByColumns = new();
+
+
+    private async Task ApplyFilterClipsAsync()
+    {
+        await ExecuteAsync(async () =>
+        {
+            if (ct != null && !ct.IsCancellationRequested)
+            {
+                await ct.CancelAsync();
+            }
+
+            ct = new CancellationTokenSource();
+
+            var result = await ClipService.GetByStreamerAsync(new ClipFilterModel
+            {
+                Skip = skip,
+                Take = pageSize,
+                OrderBy = orderBy,
+                Filters = filters,
+                StreamerId = currentStreamer?.Id
+            }, ct.Token);
+            clips = result.Clips;
+            filteredCount = result.FilteredTotal;
+
+        });
+    }
+
+    private void FilterClips()
+    {
+        filters.Clear();
+
+        if(fromDate.HasValue)
+        {
+            filters.Add(c => c.CreatedAt.Date >= fromDate.Value.Date);
+        }
+        if(toDate.HasValue)
+        {
+            filters.Add(c => c.CreatedAt.Date <= toDate.Value.Date);
+        }
+        if(selectedGames != null && selectedGames.Any())
+        {
+            filters.Add(c => selectedGames.Contains(c.GameName));
+        }
+        if(selectedCreators != null && selectedCreators.Any())
+        {
+            filters.Add(c => selectedCreators.Contains(c.CreatorName));
+        }
+
+        if(!string.IsNullOrEmpty(filterTitle))
+        {
+            filters.Add(c => c.Title.Contains(filterTitle, StringComparison.InvariantCultureIgnoreCase));
+        }
+    }
+
+    private async Task SetTitleFilterAsync(string title, RadzenDataGridColumn<ClipModel> column)
+    {
+        if (column != null)
+        {
+            string where = "";
+
+            if (!string.IsNullOrEmpty(title))
+            {
+                where = $@"Title.Contains(""{title}"", StringComparison.InvariantCultureIgnoreCase)";
+            }
+
+            await column.SetCustomFilterExpressionAsync(where);
+        }
+
+        FilterClips();
+    }
+
+    private async Task SetCreatedAtFilterAsync(RadzenDataGridColumn<ClipModel> column)
+    {
+        string where;
+        string from = "";
+        string to = "";
+
+        if(column != null)
+        {
+            if (fromDate.HasValue)
+            {
+                from = $@"CreatedAt.Date >= DateTime(""{fromDate.Value.Date.ToString("yyyy-MM-ddTHH:mm:ss")}"")";
+            }
+
+            if (toDate.HasValue)
+            {
+                to = $@"CreatedAt.Date <= DateTime(""{toDate.Value.Date.ToString("yyyy-MM-ddTHH:mm:ss")}"")";
+            }
+
+            if (fromDate.HasValue && toDate.HasValue)
+            {
+                where = $"{from} and {to}";
+            }
+            else
+            {
+                where = from + to;
+            }
+
+            await column.SetCustomFilterExpressionAsync(where);
+        }
+
+        FilterClips();
+    }
+
+
+    private async Task SetGameFilterAsync(RadzenDataGridColumn<ClipModel> column)
+    {
+
+        if(column != null)
+        {
+            string where;
+
+            if (selectedGames != null && selectedGames.Any())
+            {
+                where = "(" + string.Join(" or ",
+                    selectedGames.Select(s => $"GameName == \"{s}\"")) + ")";
+            }
+            else
+            {
+                where = "";
+            };
+
+            await column.SetCustomFilterExpressionAsync(where);
+        }
+
+        FilterClips();
+    }
+
+    private async Task SetCreatorFilterAsync(RadzenDataGridColumn<ClipModel> column)
+    {
+        if(column != null)
+        {
+            string where;
+
+            if (selectedCreators != null && selectedCreators.Any())
+            {
+                where = "(" + string.Join(" or ",
+                    selectedCreators.Select(s => $"CreatorName == \"{s}\"")) + ")";
+            }
+            else
+            {
+                where = "";
+            };
+
+            await column.SetCustomFilterExpressionAsync(where);
+        }
+
+        FilterClips();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        orderByColumns = new Dictionary<string, string>()
+        {
+            { "CreatedAt Desc", Localizer["CreatedAtDescLabel"] },
+            { "CreatedAt Asc", Localizer["CreatedAtAscLabel"] },
+            { "Votes Desc", Localizer["VotesDescLabel"] },
+            { "Votes Asc", Localizer["VotesAscLabel"] },
+            { "CreatorName Asc", Localizer["CreatorNameAscLabel"] },
+            { "CreatorName Desc", Localizer["CreatorNameDescLabel"] }
+        };
+
+        await ExecuteAsync(async () =>
+        {
+            streamers = await StreamerService.GetAllAsync();
+            var userId = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.GetUserTwitchId();
+            currentStreamer = streamers.Where(s => s.Id == userId).FirstOrDefault() ??
+                streamers.FirstOrDefault();
+            await LoadClipsAsync(true);
+        });
+    }
+
+    private async Task LoadClipsAsync(bool isLoading)
+    {
+        var func = async () =>
+        {
+            var result = await ClipService.GetByStreamerAsync(new ClipFilterModel
+            {
+                Skip = 0,
+                Take = pageSize,
+                OrderBy = orderBy,
+                Filters = filters,
+                StreamerId = currentStreamer?.Id
+            });
+            clips = result.Clips;
+            totalCount = result.FilteredTotal;
+            filteredCount = result.FilteredTotal;
+            games = await ClipService.GetGamesByStremaerAsync(currentStreamer?.Id ?? "");
+            creators = await ClipService.GetCreatorsByStremaerAsync(currentStreamer?.Id ?? "");
+        };
+
+        if (isLoading)
+        {
+            await func();
+        }
+        else
+        {
+            await ExecuteAsync(func);
+        }
+    }
+
+    private async Task DownloadAsync(ClipModel clipModel)
+    {
+        await DialogService.OpenAsync<ClipDownloadPopup>(Localizer["DownloadSelectedTitle"], new Dictionary<string, object>()
+        {
+            { "Clips", new List<ClipModel>(){ clipModel } }, { "DialogService", DialogService }
+        }, new DialogOptions()
+        {
+            CloseDialogOnEsc = false,
+            CloseDialogOnOverlayClick = false,
+            ShowClose = false
+        });
+    }
+
+    private async Task SyncWithTwitchAsync()
+    {
+        await ExecuteAsync(async () =>
+        {
+            await ClipService.GetFromApiAsync(currentStreamer?.Id);
+            await LoadClipsAsync(true);
+        });
+    }
+
+    private async Task DownloadSelectedAsync()
+    {
+        await DialogService.OpenAsync<ClipDownloadPopup>(Localizer["DownloadSelectedTitle"], new Dictionary<string, object>()
+        {
+            { "Clips", selectedClips }, { "DialogService", DialogService }
+        }, new DialogOptions() {
+            CloseDialogOnEsc = false,
+            CloseDialogOnOverlayClick = false,
+            ShowClose = false
+        });
+
+
+    }
+
+    private void Vote(ClipModel clipModel)
+    {
+        try
+        {
+            ClipService.VoteAsync(clipModel.Id, clipModel.IsUserVoted).ConfigureAwait(false);
+        }
+        catch
+        {
+         
+        }
+
+    }
+}

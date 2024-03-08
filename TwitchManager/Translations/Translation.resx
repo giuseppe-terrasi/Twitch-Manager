@@ -123,6 +123,9 @@
   <data name="AddFromTwitchLabel" xml:space="preserve">
     <value>Aggiungi da Twitch</value>
   </data>
+  <data name="BackLabel" xml:space="preserve">
+    <value>Indietro</value>
+  </data>
   <data name="BaseUrl" xml:space="preserve">
     <value>URL di base per le API</value>
   </data>
@@ -152,6 +155,18 @@
   </data>
   <data name="ConfigureTitle" xml:space="preserve">
     <value>Impostazioni</value>
+  </data>
+  <data name="CreatedAtAscLabel" xml:space="preserve">
+    <value>Data creazione crescente</value>
+  </data>
+  <data name="CreatedAtDescLabel" xml:space="preserve">
+    <value>Data creazione decrescente</value>
+  </data>
+  <data name="CreatorNameAscLabel" xml:space="preserve">
+    <value>Creata da crescente</value>
+  </data>
+  <data name="CreatorNameDescLabel" xml:space="preserve">
+    <value>Creata da discentente</value>
   </data>
   <data name="CreatorNameLabel" xml:space="preserve">
     <value>Creata da</value>
@@ -195,6 +210,12 @@
   <data name="InvalidDbFileExtesion" xml:space="preserve">
     <value>Estensione {0} non valida. il file deve avere estensione .db</value>
   </data>
+  <data name="LikedLabel" xml:space="preserve">
+    <value>Piace a me</value>
+  </data>
+  <data name="LikesLabel" xml:space="preserve">
+    <value>Mi piace</value>
+  </data>
   <data name="LoginText" xml:space="preserve">
     <value>Accedi con il tuo account twitch per continuare</value>
   </data>
@@ -221,6 +242,9 @@
   </data>
   <data name="SettingsLabel" xml:space="preserve">
     <value>Impostazioni</value>
+  </data>
+  <data name="ShowAsTableLabel" xml:space="preserve">
+    <value>Visualizza in tabella</value>
   </data>
   <data name="ShutdownLabel" xml:space="preserve">
     <value>Spegni</value>
@@ -254,5 +278,11 @@
   </data>
   <data name="ViewCountLabel" xml:space="preserve">
     <value>Visualizzazioni</value>
+  </data>
+  <data name="VotesAscLabel" xml:space="preserve">
+    <value>Numero di mi piace crescente</value>
+  </data>
+  <data name="VotesDescLabel" xml:space="preserve">
+    <value>Numero di mi piace discentente</value>
   </data>
 </root>

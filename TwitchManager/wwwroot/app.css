@@ -265,3 +265,42 @@ table td {
     display: block;
     font-size: 10px;
 }
+
+.fill {
+    color: red;
+}
+
+.clip-play {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 50px;
+    color: #FFFFFF;
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.rz-dialog-title {
+    display: inline-block !important;
+    max-width: 500px !important;
+}
+
+.clip-card:hover {
+    -webkit-box-shadow: 1px 1px 15px 5px #6441A5;
+    box-shadow: 1px 1px 15px 5px #6441A5;
+}
+
+.clip-selection-checkbox {
+    position: absolute !important;
+    right: 10px;
+    top: 10px;
+}
+
+.rz-dialog-titlebar {
+    padding: 15px 20px 0px 20px !important;
+}
+
+.rz-dialog-content {
+    padding: 10px 20px 20px 20px !important;
+}

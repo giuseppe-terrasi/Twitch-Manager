@@ -1,4 +1,7 @@
 ﻿using AutoMapper;
+
+using TwitchManager.Data.Domains;
+using TwitchManager.Helpers;
 using TwitchManager.Models.Api.Clips.Data;
 using TwitchManager.Models.Api.Games.Data;
 using TwitchManager.Models.Clips;
@@ -7,22 +10,25 @@ namespace TwitchManager.AutomapperProfiles
 {
     public class ClipProfile : Profile
     {
+        
         public ClipProfile()
         {
-            CreateMap<ClipDataModel, Data.Domains.Clip>()
+            
+            CreateMap<ClipDataModel, Clip>()
                 .ForMember(c => c.Game, opt => opt.Ignore())
                 .ForMember(c => c.Streamer, opt => opt.Ignore())
                 .ReverseMap();
 
-            CreateMap<GameDataModel, Data.Domains.Game>()
+            CreateMap<GameDataModel, Game>()
                 .ForMember(g => g.Clips, opt => opt.Ignore())
                 .ReverseMap();
 
-            CreateMap<ClipModel, Data.Domains.Clip>()
-                .ForMember(c => c.CreatedAt, opt => opt.MapFrom(c => DateTime.SpecifyKind(c.CreatedAt, DateTimeKind.Local).ToUniversalTime()))
+            CreateMap<ClipModel, Clip>()
                 .ReverseMap()
-                .ForMember(c => c.GameName, opt => opt.MapFrom(c => c.Game.Name))
-                .ForMember(c => c.CreatedAt, opt => opt.MapFrom(c => DateTime.SpecifyKind(c.CreatedAt, DateTimeKind.Utc).ToLocalTime()));
+                //.ForMember(c => c.IsUserVoted, opt => opt.MapFrom((c,m) => c.ClipVotes.Any(c => c.UserId == "")))
+                .ForMember(c => c.Votes, opt => opt.MapFrom(c => c.ClipVotes.Count))
+                .ForMember(c => c.GameName, opt => opt.MapFrom(c => c.Game.Name));
         }
+
     }
 }

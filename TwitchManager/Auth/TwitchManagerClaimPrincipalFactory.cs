@@ -4,13 +4,14 @@ namespace TwitchManager.Auth
 {
     public class TwitchManagerClaimPrincipalFactory
     {
-        public static ClaimsPrincipal CreatePrincipal(string accessToken, string userId, string username, string profileImageUrl, bool isAmin)
+        public static ClaimsPrincipal CreatePrincipal(string accessToken, string twitchId, string userId, string username, string profileImageUrl, bool isAmin)
         {
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Name, "TwitchManager"),
                 new("access_token", accessToken),
                 new("userId", userId),
+                new("twitchId", twitchId),
                 new("username", username),
                 new("profileImageUrl", profileImageUrl),
             };

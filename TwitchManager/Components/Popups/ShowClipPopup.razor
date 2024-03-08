@@ -1,0 +1,72 @@
+﻿@using TwitchManager.Components.Abstractions
+@using TwitchManager.Models.Clips
+@using TwitchManager.Services.Abstractions
+
+@inherits BaseComponent
+
+@inject IClipService ClipService
+
+<div class="row mx-0">
+    <div class="col-12 p-0">
+        <video src="@Clip.VideoUrl" autoplay muted controls class="img-fluid" style="min-width: 100%"/>
+    </div>
+</div>
+
+<div class="row mt-1 mx-0">
+    <div class="col-12 p-0 d-flex justify-content-between">
+        <small>@Clip.Title</small>
+        <button type="button" class="btn btn-link text-decoration-none text-black p-0" @onclick="async () => await DownloadRequested.InvokeAsync()">
+            <i class="ph ph-download-simple grid-icon"></i>
+        </button>
+    </div>
+</div>
+<div class="row mt-1 mx-0">
+    <div class="col-12 d-flex p-0 justify-content-between">
+        <small class="user-badge-id">@(Clip.CreatedAt.ToString())</small>
+    </div>
+</div>
+<div class="row mt-3 mx-0">
+    <div class="col-12 p-0 d-flex justify-content-between">
+        <span class="d-flex align-items-start">
+            <i class="ph ph-heart pointer me-2 @(Clip.IsUserVoted ? "fill" : "") grid-icon" @onclick="() => Vote(Clip)"></i>
+            @Localizer["LikesLabel"]: @Clip.Votes
+        </span>
+        <span>by @Clip.CreatorName</span>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public DialogService DialogService { get; set; }
+
+    [Parameter]
+    public ClipModel Clip { get; set; }
+
+    [Parameter]
+    public EventCallback DownloadRequested { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if(string.IsNullOrEmpty(Clip.VideoUrl))
+        {
+            await ExecuteAsync(async () =>
+            {
+                Clip.VideoUrl = await ClipService.GetDownloadLinkAsync(Clip.Id, CancellationToken.None);
+            });
+        }
+    }
+
+    private void Vote(ClipModel clipModel)
+    {
+        try
+        {
+            ClipService.VoteAsync(clipModel.Id, clipModel.IsUserVoted).ConfigureAwait(false);
+        }
+        catch
+        {
+
+        }
+
+    }
+}
