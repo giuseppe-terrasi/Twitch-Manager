@@ -33,6 +33,8 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo("/keys"))
     .SetApplicationName("TwitchManager");
 
+
+
 builder.Services.AddAutoMapper(cfg => 
 { 
     cfg.AddExpressionMapping(); 
@@ -41,6 +43,7 @@ builder.Services.AddAutoMapper(cfg =>
 builder.Services.ConfigureWritable<ConfigData>(
     builder.Configuration.GetSection("Config"));
 
+builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddRadzenComponents();

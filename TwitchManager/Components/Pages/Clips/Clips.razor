@@ -26,12 +26,12 @@
 <PageTitle>@Localizer["ClipPageTitle"]</PageTitle>
 
 <div class="row page-title">
-    <div class="col-8">
+    <div class="col-12 col-md-8">
         <h1>
             @Localizer["ClipPageTitle"]
         </h1>
     </div>
-    <div class="col-4 d-flex justify-content-end align-items-center">
+    <div class="col-12 col-md-4 d-flex justify-content-start justify-content-md-end align-items-center">
         <RadzenLabel class="me-3">@Localizer["StreamerLabel"]:</RadzenLabel>
         <RadzenDropDown Data="streamers" TValue="StreamerModel" @bind-Value=currentStreamer Context="streamer" Change="async () => await LoadClipsAsync(false)">
             <Template>
@@ -57,13 +57,13 @@
 </Microsoft.AspNetCore.Components.Authorization.CascadingAuthenticationState>
 
 <div class="row">
-    <div class="col-10 d-flex align-items-end">
+    <div class="col-12 col-md-10 d-flex align-items-end">
         <div class="pointer mb-1" @onclick="() => showFilter = !showFilter">
             <h4 class="d-inline">@Localizer["FilterLabel"]</h4>
             <i class="ph ph-caret-@(showFilter? "up" : "down") ms-2"></i>
         </div>
     </div>
-    <div class="col-2">
+    <div class="col-12 col-md-2">
         <label class="d-block">@Localizer["ClipPerPageLabel"]</label>
         <RadzenDropDown TValue="int" Data="new[] { 12, 24, 36, 48, 100 }" Value="pageSize"
                         Change=" async (v)=> { pageSize = (int)v; await ApplyFilterClipsAsync();}" class="w-100" />
@@ -74,21 +74,21 @@
     <div class="row">
         <div class="col-12">
             <div class="row">
-                <div class="col-2">
+                <div class="col-12 col-md-2 mt-3 mt-md-0">
                     <label class="d-block">@Localizer["ClipCreatedFromLabel"]</label>
                     <RadzenDatePicker @bind-Value="fromDate" DateFormat="d" Change="() => FilterClips()" AllowClear=true class="w-100">
                     </RadzenDatePicker>
                 </div>
-                <div class="col-2">
+                <div class="col-12 col-md-2 mt-3 mt-md-0">
                     <label class="d-block">@Localizer["ClipCreatedToLabel"]</label>
                     <RadzenDatePicker @bind-Value="toDate" DateFormat="d" Change="() => FilterClips()" AllowClear=true class="w-100" />
                 </div>
-                <div class="col-4">
+                <div class="col-12 col-md-4 mt-3 mt-md-0">
                     <label class="d-block">@Localizer["GameNameLabel"]</label>
                     <RadzenDropDown TValue="List<string>" Data="games" @bind-Value=selectedGames AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Multiple=true
                                     Change="() => FilterClips()" class="w-100" AllowClear=true AllowVirtualization=true />
                 </div>
-                <div class="col-4">
+                <div class="col-12 col-md-4 mt-3 mt-md-0">
                     <label class="d-block">@Localizer["CreatorNameLabel"]</label>
                     <RadzenDropDown TValue="List<string>" Data="creators" @bind-Value=selectedCreators AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Multiple=true
                                     Change="() => FilterClips()" class="w-100" AllowClear=true AllowVirtualization=true />
@@ -103,7 +103,7 @@
         </div>
     </div>
     <div class="row mt-3">
-        <div class="col-12 d-flex">
+        <div class="col-12 d-flex flex-column flex-md-row">
             <div class="me-3">
                 <label>Ordina per</label>
                 <RadzenDropDown TValue="string" Data="orderByColumns" @bind-Value="orderBy" ValueProperty="Key" TextProperty="Value" Change="async () => await ApplyFilterClipsAsync()">
@@ -114,24 +114,26 @@
                     </Template>
                 </RadzenDropDown>
             </div>
-            <button class="btn btn-primary d-flex justify-content-center align-items-center" @onclick="async () => await ApplyFilterClipsAsync()">
-                Applica filtri
+            <button class="btn btn-primary d-flex justify-content-center align-items-center mt-3 mt-md-0" @onclick="async () => await ApplyFilterClipsAsync(resetPage: true)">
+                @Localizer["ApplyFiltersLabel"]
             </button>
         </div>
     </div>
 }
 <div class="row mt-3">
-    <div class="col-6 d-flex justify-content-start align-items-center">
-        <div class="d-flex justify-content-start align-items-center">
+    <div class="col-12 col-md-6 d-flex justify-content-start align-items-center">
+        <div class="d-flex justify-content-start align-items-center flex-column flex-md-row">
             <span>
                 @Localizer["TotalsLabel"]: <b class="mx-1">@totalCount</b>
                 @Localizer["FilteredLabel"]: <b class="mx-1">@filteredCount</b>
             </span>
-            <label class="ms-3 mb-0">@Localizer["ShowAsTableLabel"]</label>
-            <RadzenSwitch @bind-Value=showTable class="ms-2"/>
+            <div class="d-none d-md-block">
+                <label class="mb-0">@Localizer["ShowAsTableLabel"]</label>
+                <RadzenSwitch @bind-Value=showTable class="ms-2" />
+            </div>
         </div>
     </div>
-    <div class="col-6 d-flex justify-content-end align-items-center">
+    <div class="col-12 col-md-6 d-flex justify-content-end align-items-center mt-3 mt-md-0">
         <button class="btn btn-primary d-flex justify-content-center align-items-center" disabled="@(selectedClips.Count == 0)" @onclick="async () => await DownloadSelectedAsync()">
             @Localizer["DownloadSelectedLabel"] <i class="ph ph-download-simple ms-3"></i>
         </button>
@@ -180,7 +182,7 @@
 
     int pageSize = 12;
 
-    bool showFilter = true;
+    bool showFilter = false;
     int totalCount = 0;
     int filteredCount = 0;
     int skip = 0;
@@ -193,10 +195,13 @@
     Dictionary<string, string> orderByColumns = new();
 
 
-    private async Task ApplyFilterClipsAsync()
+    private async Task ApplyFilterClipsAsync(bool resetPage = false)
     {
         await ExecuteAsync(async () =>
         {
+            if (resetPage)
+                skip = 0;
+
             if (ct != null && !ct.IsCancellationRequested)
             {
                 await ct.CancelAsync();

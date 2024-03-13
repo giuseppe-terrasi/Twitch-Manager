@@ -13,8 +13,11 @@
 </div>
 
 <div class="row mt-1 mx-0">
-    <div class="col-12 p-0 d-flex justify-content-between">
+    <div class="col-12 p-0 d-flex justify-content-between align-items-center">
         <small>@Clip.Title</small>
+        <a href="@Clip.Url" target="_blank" class="text-decoration-none text-black">
+            <i class="ph ph-arrow-square-out grid-icon ms-2 me-1"></i>
+        </a>
         <button type="button" class="btn btn-link text-decoration-none text-black p-0" @onclick="async () => await DownloadRequested.InvokeAsync()">
             <i class="ph ph-download-simple grid-icon"></i>
         </button>
@@ -61,6 +64,7 @@
     {
         try
         {
+            clipModel.Vote();
             ClipService.VoteAsync(clipModel.Id, clipModel.IsUserVoted).ConfigureAwait(false);
         }
         catch

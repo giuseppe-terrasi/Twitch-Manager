@@ -123,6 +123,9 @@
   <data name="AddFromTwitchLabel" xml:space="preserve">
     <value>Add from Twitch</value>
   </data>
+  <data name="ApplyFiltersLabel" xml:space="preserve">
+    <value>Apply filters</value>
+  </data>
   <data name="BackLabel" xml:space="preserve">
     <value>Back</value>
   </data>

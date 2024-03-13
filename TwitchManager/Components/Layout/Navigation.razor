@@ -1,0 +1,62 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using TwitchManager.Auth
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Helpers
+
+@inherits BaseComponent
+
+<RadzenHeader>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+        <div class="logo-container">
+            <a href="/clips" class="text-decoration-none d-flex align-items-end">
+                <img src="img/logo.png" height="35" /><span>witch Manager</span>
+            </a>
+
+        </div>
+        <RadzenSidebarToggle Click="@(() => sidebar1Expanded = !sidebar1Expanded)"/>
+        <AuthorizeView Context="auth">
+            <Authorized>
+                <div class="w-100 d-flex align-items-center justify-content-end py-3 pe-3">
+                    <img src="@auth.User.GetProfileImageUrl()" class="profile-logo me-2" />
+                    <div>
+                        @auth.User.GetUsername()
+                        <small class="user-badge-id">@auth.User.GetUserTwitchId()</small>
+                    </div>
+                    <a href="/settings" class="text-decoration-none mx-3">
+                        <i class="ph ph-gear"></i>
+                    </a>
+                    <a href="/shutdown" class="text-decoration-none">
+                        <i class="ph ph-power"></i>
+                    </a>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </RadzenStack>
+</RadzenHeader>
+<RadzenSidebar @bind-Expanded="@sidebar1Expanded" @bind-Responsive="responsive">
+    <AuthorizeView>
+        <Authorized>
+            <AuthorizeView Policy="@TwitchManagerAuthenticationOptions.ConfiguredPolicy" Context="inner">
+                <Authorized>
+                    <div class="col-auto">
+                        <NavMenu />
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </Authorized>
+    </AuthorizeView>
+</RadzenSidebar>
+
+@code {
+    bool sidebar1Expanded = false;
+    bool responsive = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            responsive = true;
+        }
+        base.OnAfterRender(firstRender);
+    }
+}

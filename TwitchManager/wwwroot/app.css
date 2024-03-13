@@ -73,7 +73,7 @@ label {
 }
 
 .menu-container {
-    height: 100vh;
+/*    height: 100vh;
     min-height: 100vh;
     width: 200px;
     border-right: 1px solid #00000033;
@@ -81,7 +81,8 @@ label {
     top: 0;
     left: 0;
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr;*/
+    padding-left: 20px;
 }
 
 .menu-content {
@@ -102,7 +103,7 @@ label {
 
     .page-title {
         position: sticky;
-        top: 0;
+        top: -16px;
         z-index: 1000;
         background-color: #FFFFFF;
     }
@@ -110,11 +111,20 @@ label {
 .logo-container {
     display: flex;
     align-items: end;
-    padding-top: 15px;
     margin-left: -10px;
     background-color: #FFFFFF;
     z-index: 9999;
+    width: 160px;
+    margin-left: 10px;
 }
+
+@media (max-width: 1200px) {
+    .logo-container {
+        width: 250px;
+    }
+}
+
+
 .logo-container span {
     margin-left: -9px;
 }
@@ -303,4 +313,35 @@ table td {
 
 .rz-dialog-content {
     padding: 10px 20px 20px 20px !important;
+}
+
+.rz-sidebar {
+    width: 201px !important;
+    border-right: 1px solid #00000033;
+    z-index: 99995 !important;
+}
+
+#main-container {
+    padding: 0 !important;
+}
+
+.rz-body {
+    background-color: #FFFFFF !important;
+    padding-left: 30px !important;
+}
+
+.rz-header a, .rz-sidebar-toggle {
+    color: #000000 !important;
+}
+
+.rz-header {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    position: sticky !important;
+    z-index: 99996 !important;
+}
+
+
+.rz-dialog-wrapper {
+    z-index: 99996 !important;
 }

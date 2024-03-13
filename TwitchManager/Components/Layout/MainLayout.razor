@@ -3,27 +3,21 @@
 @inherits LayoutComponentBase
 
 <div class="container-fluid" id="main-container">
-    <div class="row">
-        <AuthorizeView>
-            <Authorized>
-                <AuthorizeView Policy="@TwitchManagerAuthenticationOptions.ConfiguredPolicy" Context="inner">
-                    <Authorized>
-                        <div class="col-auto">
-                            <NavMenu @rendermode=InteractiveServerNotPrerendered/>
-                        </div>
-                    </Authorized>
-                </AuthorizeView>
-            </Authorized>
-        </AuthorizeView>
-        <main class="col">
-            <div class="row mt-3 mx-0">
-                <div class="col-12 p-0">
-                    @Body
+    <RadzenLayout>
+        <Navigation @rendermode="@InteractiveServerNotPrerendered" />
+        <RadzenBody>
+            <main>
+                <div class="row mt-3 mx-0">
+                    <div class="col-12 p-0">
+                        @Body
+                    </div>
                 </div>
-            </div>
-        </main>
-    </div>
+            </main>
+        </RadzenBody>
+    </RadzenLayout>
 </div>
+
+
 
 <RadzenComponents @rendermode="@InteractiveServerNotPrerendered" />
 
