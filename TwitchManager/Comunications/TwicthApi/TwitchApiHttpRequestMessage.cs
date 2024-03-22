@@ -9,11 +9,11 @@ namespace TwitchManager.Comunications.TwicthApi
 
     public class TwitchApiHttpRequestMessage<T> : TwitchApiHttpRequestMessage
     {
-        public async Task<T> GetDataAsync(HttpResponseMessage response)
+        public async Task<T> GetDataAsync(HttpResponseMessage response, CancellationToken cancellationToken = default)
         {
             if (response.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 return JsonSerializer.Deserialize<T>(content);
             }

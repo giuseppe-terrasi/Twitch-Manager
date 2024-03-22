@@ -22,6 +22,8 @@ using TwitchManager.Models.General;
 using TwitchManager.Services.Abstractions;
 using TwitchManager.Services.Implementations;
 using AutoMapper.Extensions.ExpressionMapping;
+using Quartz;
+using TwitchManager.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,6 +69,24 @@ builder.Services.AddTwitchManagerAuth();
 builder.Services.AddLocalization(options => options.ResourcesPath = "");
 
 builder.Services.AddControllers();
+
+builder.Services.AddQuartz(q =>
+{
+    if (bool.TryParse(builder.Configuration["Jobs:ClipSyncronizerJob:Enabled"], out var enabled) && enabled)
+    {
+        var jobKey = new JobKey("ClipSyncronizerJob");
+        q.AddJob<ClipSyncronizerJob>(opts => opts.WithIdentity(jobKey));
+
+        q.AddTrigger(opts => opts
+            .ForJob(jobKey)
+            .WithIdentity("ClipSyncronizerJob-trigger")
+            .WithCronSchedule(builder.Configuration["Jobs:ClipSyncronizerJob:Schedule"])
+        );
+    }
+});
+
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+
 
 var app = builder.Build();
 

@@ -5,14 +5,14 @@ namespace TwitchManager.Services.Abstractions
 {
     public interface IStreamerService
     {
-        Task<IEnumerable<StreamerModel>> GetAllAsync();
+        Task<IEnumerable<StreamerModel>> GetAllAsync(CancellationToken cancellationToken = default);
 
-        Task<StreamerModel> GetByIdAsync(string id);
+        Task<StreamerModel> GetByIdAsync(string id, CancellationToken cancellationToken = default);
 
-        Task AddAsync(StreamerModel streamer);
+        Task AddAsync(StreamerModel streamer, CancellationToken cancellationToken = default);
 
-        Task AddAsync(StreamerDataModel streamer);
+        Task AddAsync(StreamerDataModel streamer, CancellationToken cancellationToken = default);
 
-        Task<StreamerDataModel> GetStreamerFromTwitchAsync(string username);
+        Task<StreamerDataModel> GetStreamerFromTwitchAsync(string username, CancellationToken cancellationToken = default);
     }
 }

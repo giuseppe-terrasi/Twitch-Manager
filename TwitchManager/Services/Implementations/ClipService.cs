@@ -3,9 +3,7 @@ using AutoMapper.Extensions.ExpressionMapping;
 
 using Microsoft.EntityFrameworkCore;
 
-using System.Linq;
 using System.Linq.Dynamic.Core;
-using System.Linq.Expressions;
 
 using TwitchManager.Comunications.TwicthApi.Api.Clips;
 using TwitchManager.Comunications.TwicthApi.Api.Games;
@@ -52,7 +50,7 @@ namespace TwitchManager.Services.Implementations
             var request = new ClipTokenTwitchGQLRequest(cliId);
 
             var httpResponse = await client.SendAsync(request, cancellationToken);  
-            var clipToken = (await request.GetDataAsync(httpResponse)).FirstOrDefault() ?? throw new Exception("No video found in the clip");
+            var clipToken = (await request.GetDataAsync(httpResponse, cancellationToken)).FirstOrDefault() ?? throw new Exception("No video found in the clip");
 
             return clipToken.GetUrl();
         }
@@ -72,15 +70,15 @@ namespace TwitchManager.Services.Implementations
             return clip;
         }
 
-        public async Task GetFromApiAsync(string streamerId)
+        public async Task GetFromApiAsync(string streamerId, CancellationToken cancellationToken = default)
         {
             var client = httpClientFactory.CreateClient("TwitchApi");
 
-            var context = await dbContextFactory.CreateDbContextAsync();
+            var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             var maxDate = await context.Clips
                 .Where(c => c.BroadcasterId == streamerId)  
-                .MaxAsync(c => (DateTime?)c.CreatedAt);
+                .MaxAsync(c => (DateTime?)c.CreatedAt, cancellationToken);
 
             var from = maxDate == null ? "" : maxDate.Value.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
@@ -90,22 +88,22 @@ namespace TwitchManager.Services.Implementations
             {
                 var request = new GetClipsHttpRequestMessage(broadcasterId: streamerId, first: "100", startedAt: from, after: cursor);
 
-                var response = await client.SendAsync(request);
+                var response = await client.SendAsync(request, cancellationToken);
 
-                var clipResponse = await request.GetDataAsync(response);
+                var clipResponse = await request.GetDataAsync(response, cancellationToken);
 
                 var clips = clipResponse.Data.Select(mapper.Map<Clip>);
 
                 foreach(var clip in clips)
                 {
-                    var existingGame = await context.Games.FindAsync(clip.GameId);
+                    var existingGame = await context.Games.FindAsync([clip.GameId, cancellationToken], cancellationToken: cancellationToken);
                     if(existingGame == null)
                     {
                         var gameRequest = new GetGameHttpRequestMessage(id: clip.GameId);
 
-                        var responseMessage = await client.SendAsync(gameRequest);
+                        var responseMessage = await client.SendAsync(gameRequest, cancellationToken);
 
-                        var gameResponse = await gameRequest.GetDataAsync(responseMessage);
+                        var gameResponse = await gameRequest.GetDataAsync(responseMessage, cancellationToken);
 
                         var games = gameResponse.Data.Select(mapper.Map<Game>);
 
@@ -116,7 +114,7 @@ namespace TwitchManager.Services.Implementations
                             {
                                 context.Games.Add(game);
 
-                                await context.SaveChangesAsync();
+                                await context.SaveChangesAsync(cancellationToken);
                             }
                             catch
                             {
@@ -130,7 +128,7 @@ namespace TwitchManager.Services.Implementations
                     {
                         context.Clips.Add(clip);
 
-                        await context.SaveChangesAsync();
+                        await context.SaveChangesAsync(cancellationToken);
                     }
                     catch
                     {

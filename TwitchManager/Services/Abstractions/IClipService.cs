@@ -22,7 +22,7 @@ namespace TwitchManager.Services.Abstractions
 
         Task<ClipModel> GetByIdAsync(string id);
 
-        Task GetFromApiAsync(string streamerId);
+        Task GetFromApiAsync(string streamerId, CancellationToken cancellationToken = default);
 
         Task VoteAsync(string clipId, bool isUpvote);
     }

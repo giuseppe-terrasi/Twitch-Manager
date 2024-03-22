@@ -42,6 +42,7 @@
 	  <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.2" />
 	  <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
 	  <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.1" />
+	  <PackageReference Include="Quartz.AspNetCore" Version="3.8.1" />
 	  <PackageReference Include="Radzen.Blazor" Version="4.25.11" />
 	</ItemGroup>
 
