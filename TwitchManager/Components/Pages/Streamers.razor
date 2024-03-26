@@ -9,6 +9,7 @@
 @inject IStreamerService StreamerService
 @inject IJSRuntime JSRuntime
 @inject DialogService DialogService
+@inject IHttpContextAccessor HttpContextAccessor
 
 @rendermode InteractiveServerNotPrerendered
 
@@ -25,15 +26,9 @@
         </h1>
     </div>
     <div class="col-4 d-flex justify-content-end">
-        <Microsoft.AspNetCore.Components.Authorization.CascadingAuthenticationState>
-            <Microsoft.AspNetCore.Components.Authorization.AuthorizeView Roles="Admin">
-                <Authorized>
-                    <button class="btn btn-primary d-flex justify-content-center align-items-center" @onclick="async () => await AddFromTwitchAsync()">
-                        @Localizer["AddFromTwitchLabel"] <i class="ph ph-twitch-logo ms-3"></i>
-                    </button>
-                </Authorized>
-            </Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
-        </Microsoft.AspNetCore.Components.Authorization.CascadingAuthenticationState>
+        <button class="btn btn-primary d-flex justify-content-center align-items-center" @onclick="async () => await AddFromTwitchAsync()">
+            @Localizer["AddFromTwitchLabel"] <i class="ph ph-twitch-logo ms-3"></i>
+        </button>
     </div>
 </div>
 
@@ -55,6 +50,13 @@
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.Login))" Title="Username" />
                 <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.DisplayName))" Title="@Localizer["DisplayNameLabel"]" />
+                <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.IsClipDefault))" Title="@Localizer["IsClipDefaultLabel"]" Context="streamer">
+                    <Template>
+                        <span class="me-1 pointer" @onclick="() => ToggleDefault((StreamerModel)streamer)">
+                            <i class="ph ph-star @(((StreamerModel)streamer).IsClipDefault ? "selected" : "")"></i>
+                        </span>
+                    </Template>
+                </RadzenDataGridColumn>
                 <RadzenDataGridColumn TItem="StreamerModel" Title="@Localizer["ActionsLabel"]" Context="streamer" Filterable=false Reorderable=false Sortable=false TextAlign="TextAlign.Center">
                     <Template>
                         <a href="/streamer/@streamer.Id" class="text-decoration-none text-black">
@@ -92,8 +94,42 @@
             await ExecuteAsync(async () =>
             {
                 await StreamerService.AddAsync(toAdd);
-                streamers = await StreamerService.GetAllAsync();
+
+                var isAdmin = HttpContextAccessor.HttpContext.User.IsInRole("Admin");
+
+                if (isAdmin)
+                {
+                    streamers = await StreamerService.GetAllAsync();
+
+                }
+                else
+                {
+                    streamers = await StreamerService.GetAllByUserAsync();
+
+                }
             });
+        }
+    }
+
+    private void ToggleDefault(StreamerModel streamer)
+    {
+        var currentDefault = streamers.Where(s => s.IsClipDefault).FirstOrDefault();
+
+        streamer.IsClipDefault = !streamer.IsClipDefault;
+
+        try
+        {
+            if (currentDefault != null)
+            {
+                currentDefault.IsClipDefault = false;
+                StreamerService.UpdateAsync(currentDefault).ConfigureAwait(false);
+            }
+
+            StreamerService.UpdateAsync(streamer).ConfigureAwait(false);
+        }
+        catch
+        {
+
         }
     }
 }

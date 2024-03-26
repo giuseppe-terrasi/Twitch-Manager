@@ -213,6 +213,9 @@
   <data name="InvalidDbFileExtesion" xml:space="preserve">
     <value>Invalid {0} extension. Data file must have .db extension</value>
   </data>
+  <data name="IsClipDefaultLabel" xml:space="preserve">
+    <value>Default streamer for clips</value>
+  </data>
   <data name="LikedLabel" xml:space="preserve">
     <value>Liked</value>
   </data>
@@ -224,6 +227,9 @@
   </data>
   <data name="LoginWithTwitchLabel" xml:space="preserve">
     <value>Login with Twitch</value>
+  </data>
+  <data name="NoClipsFoundLabel" xml:space="preserve">
+    <value>The selected streamer has no clips available or they may still need to be synchronized (synchronization occurs every hour)</value>
   </data>
   <data name="NoStreamerImportedLabel" xml:space="preserve">
     <value>No streamer imported</value>

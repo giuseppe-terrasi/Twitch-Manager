@@ -12,5 +12,6 @@
         public string OfflineImageUrl { get; set; }
         public int ViewCount { get; set; }
         public string CreatedAt { get; set; }
+        public bool IsClipDefault { get; set; }
     }
 }

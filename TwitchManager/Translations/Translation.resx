@@ -213,6 +213,9 @@
   <data name="InvalidDbFileExtesion" xml:space="preserve">
     <value>Estensione {0} non valida. il file deve avere estensione .db</value>
   </data>
+  <data name="IsClipDefaultLabel" xml:space="preserve">
+    <value>Streamer predefinito per le clip</value>
+  </data>
   <data name="LikedLabel" xml:space="preserve">
     <value>Piace a me</value>
   </data>
@@ -224,6 +227,9 @@
   </data>
   <data name="LoginWithTwitchLabel" xml:space="preserve">
     <value>Accedi con Twitch</value>
+  </data>
+  <data name="NoClipsFoundLabel" xml:space="preserve">
+    <value>Lo streamer selezionato non ha nessuna clip oppure devono essere ancora sincronizzate (la sincronizzazione avviene ogni ora)</value>
   </data>
   <data name="NoStreamerImportedLabel" xml:space="preserve">
     <value>Nessuno streamer importato</value>

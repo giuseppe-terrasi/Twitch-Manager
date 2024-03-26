@@ -9,5 +9,7 @@
         public DateTime CreatedOn { get; set; }
 
         public virtual ICollection<ClipVote> ClipVotes { get; set; }
+
+        public virtual ICollection<UserStreamer> UserStreamers { get; set; }
     }
 }

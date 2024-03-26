@@ -14,5 +14,7 @@
         public string CreatedAt { get; set; }
 
         public virtual ICollection<Clip> Clips { get; set; }
+
+        public virtual ICollection<UserStreamer> UserStreamers { get; set; }
     }
 }

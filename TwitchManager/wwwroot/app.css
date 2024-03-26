@@ -345,3 +345,7 @@ table td {
 .rz-dialog-wrapper {
     z-index: 99996 !important;
 }
+
+.ph-star.selected {
+    color: #d5ac0c;
+}

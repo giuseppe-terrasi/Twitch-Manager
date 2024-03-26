@@ -17,6 +17,10 @@ namespace TwitchManager.AutomapperProfiles
 
             CreateMap<StreamerModel, Data.Domains.Streamer>()
                 .ReverseMap();
+
+            CreateMap<Data.Domains.UserStreamer, StreamerModel>()
+                .ForMember(m => m.Id, opt => opt.MapFrom(us => us.Streamer.Id))
+                .IncludeMembers(us => us.Streamer);
         }
     }
 }

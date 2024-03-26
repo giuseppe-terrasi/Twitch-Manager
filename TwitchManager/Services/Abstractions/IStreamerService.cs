@@ -7,12 +7,16 @@ namespace TwitchManager.Services.Abstractions
     {
         Task<IEnumerable<StreamerModel>> GetAllAsync(CancellationToken cancellationToken = default);
 
+        Task<IEnumerable<StreamerModel>> GetAllByUserAsync(CancellationToken cancellationToken = default);
+
         Task<StreamerModel> GetByIdAsync(string id, CancellationToken cancellationToken = default);
 
-        Task AddAsync(StreamerModel streamer, CancellationToken cancellationToken = default);
+        Task<bool> AddAsync(StreamerModel streamer, CancellationToken cancellationToken = default);
 
-        Task AddAsync(StreamerDataModel streamer, CancellationToken cancellationToken = default);
+        Task<bool> AddAsync(StreamerDataModel streamer, CancellationToken cancellationToken = default);
 
         Task<StreamerDataModel> GetStreamerFromTwitchAsync(string username, CancellationToken cancellationToken = default);
+
+        Task UpdateAsync(StreamerModel streamer, CancellationToken cancellationToken = default);
     }
 }
