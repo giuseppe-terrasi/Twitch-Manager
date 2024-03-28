@@ -7,13 +7,11 @@
 
 @inherits BaseComponent
 
-@attribute [Authorize(Roles = "Admin")]
-
 <PageTitle>
     @Localizer["StreamerDetailsPageTitle"]
 </PageTitle>
 
-<a href="/streamers" class="d-flex align-items-center text-decoration-none text-black">
+<a href="/streamers" class="d-flex align-items-center text-decoration-none text-black mb-3">
     <i class="ph ph-arrow-left grid-icon me-2"></i> @Localizer["BackLabel"]
 </a>
 
@@ -58,6 +56,14 @@
             @Localizer["DescriptionLabel"]
         </RadzenLabel>
         <RadzenTextBox @bind-Value="_model.Description" class="form-control" Disabled=true />
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <a href="/clips?streamer=@_model.Id" class="btn btn-primary">
+            @Localizer["GoToClipsLabel"]
+        </a>
     </div>
 </div>
 

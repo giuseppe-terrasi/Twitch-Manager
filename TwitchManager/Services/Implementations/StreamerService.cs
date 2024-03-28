@@ -15,19 +15,20 @@ namespace TwitchManager.Services.Implementations
 {
     public class StreamerService(IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IMapper mapper, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : IStreamerService
     {
-        public async Task<IEnumerable<StreamerModel>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<ICollection<StreamerModel>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             var userId = httpContextAccessor.HttpContext.User.GetUserId();
 
             var streamers = await context.Streamers
+                    .Include(s => s.UserStreamers.Where(s => s.UserId == userId && s.IsClipDefault))
                     .Select(c => mapper.Map<StreamerModel>(c))
                     .ToListAsync(cancellationToken);
 
             return streamers;
         }
 
-        public async Task<IEnumerable<StreamerModel>> GetAllByUserAsync(CancellationToken cancellationToken = default)
+        public async Task<ICollection<StreamerModel>> GetAllByUserAsync(CancellationToken cancellationToken = default)
         {
             var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             var userId = httpContextAccessor.HttpContext.User.GetUserId();
@@ -117,6 +118,16 @@ namespace TwitchManager.Services.Implementations
             existingStreamer.IsClipDefault = streamer.IsClipDefault;
 
             await context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<bool> UserHasAnyStreamer()
+        {
+            var context = await dbContextFactory.CreateDbContextAsync();
+
+            var userId = httpContextAccessor.HttpContext.User.GetUserId();
+
+            return await context.UserStreamers
+                .AnyAsync(us => us.UserId == userId);
         }
     }
 }

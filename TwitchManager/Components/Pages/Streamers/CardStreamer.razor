@@ -1,0 +1,53 @@
+﻿@using TwitchManager.Components.Abstractions
+@using TwitchManager.Models.Streamers
+
+@inherits BaseComponent
+
+<div class="row">
+    <Virtualize TItem="StreamerModel" Items="Streamers" Context="streamer" OverscanCount="5">
+        <div class="col-12 col-md-4 col-lg-4 col-xl-3 col-xxl-2 mt-3 position-relative">
+            <div class="card d-flex justify-content-between h-100 clip-card">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <a href="/streamer/@streamer.Id" class="text-decoration-none text-black">
+                            <img src="@streamer.ProfileImageUrl" class="pointer" style="height: auto; width: 100%" />
+                        </a>
+                    </div>
+                </div>
+                <div class="row mt-1">
+                    <div class="col-12 px-4 d-flex justify-content-between">
+                        <small>@streamer.DisplayName</small>
+                        <span class="me-1 pointer" @onclick="async () => await DefaultChanged.InvokeAsync((StreamerModel)streamer)">
+                            <i class="ph ph-star @(((StreamerModel)streamer).IsClipDefault ? "selected" : "")"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 px-4 d-flex justify-content-between">
+                        <small class="user-badge-id">@(streamer.Id)</small>
+                        <a href="/clips?streamer=@streamer.Id" class="text-decoration-none text-black">
+                            <i class="ph ph-film-reel grid-icon"></i>
+                        </a>
+                    </div>
+                </div>
+@*                 <div class="row mt-3">
+                    <div class="col-12 px-4 pb-2 d-flex justify-content-between">
+                        <span class="d-flex align-items-start">
+                            <i class="ph ph-heart pointer me-2 @(clip.IsUserVoted ? "fill" : "") grid-icon" @onclick="() => Vote(clip)"></i>
+                            @Localizer["LikesLabel"]: @clip.Votes
+                        </span>
+                        <span>by @clip.CreatorName</span>
+                    </div>
+                </div> *@
+            </div>
+        </div>
+    </Virtualize>
+</div>
+
+@code {
+    [Parameter]
+    public ICollection<StreamerModel> Streamers { get; set; }
+
+    [Parameter]
+    public EventCallback<StreamerModel> DefaultChanged { get; set; }
+}

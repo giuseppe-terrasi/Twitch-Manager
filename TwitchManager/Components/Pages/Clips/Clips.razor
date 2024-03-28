@@ -175,6 +175,9 @@
 }
 @code {
 
+    [SupplyParameterFromQuery]
+    public string Streamer { get; set; }
+
     private ICollection<ClipModel> clips = new List<ClipModel>();
     private IList<ClipModel> selectedClips = new List<ClipModel>();
     // private IList<RadzenDataGridColumn<ClipModel>> gridColumns = new List<RadzenDataGridColumn<ClipModel>>();
@@ -378,7 +381,10 @@
         {
             streamers = await StreamerService.GetAllByUserAsync();
             var userId = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.GetUserTwitchId();
-            currentStreamer = streamers.Where(s => s.IsClipDefault || s.Id == userId).FirstOrDefault() ??
+
+            var streamerId = !string.IsNullOrEmpty(Streamer) ? Streamer : userId;
+
+            currentStreamer = streamers.Where(s => s.IsClipDefault || s.Id == streamerId).FirstOrDefault() ??
                 streamers.FirstOrDefault();
             await LoadClipsAsync(true);
         });

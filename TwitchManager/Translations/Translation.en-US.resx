@@ -207,6 +207,9 @@
   <data name="GenericErrorMessage" xml:space="preserve">
     <value>An error occurred</value>
   </data>
+  <data name="GoToClipsLabel" xml:space="preserve">
+    <value>Vai alle clip</value>
+  </data>
   <data name="ImageLabel" xml:space="preserve">
     <value>Image</value>
   </data>
@@ -230,6 +233,9 @@
   </data>
   <data name="NoClipsFoundLabel" xml:space="preserve">
     <value>The selected streamer has no clips available or they may still need to be synchronized (synchronization occurs every hour)</value>
+  </data>
+  <data name="NoDefaultStreamerSelected" xml:space="preserve">
+    <value>You haven’t selected a default streamer for your clips page yet. Choose one by clicking on the star icon.</value>
   </data>
   <data name="NoStreamerImportedLabel" xml:space="preserve">
     <value>No streamer imported</value>

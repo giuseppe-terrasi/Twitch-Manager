@@ -1,0 +1,50 @@
+﻿@using TwitchManager.Components.Abstractions
+@using TwitchManager.Models.Streamers
+
+@inherits BaseComponent
+
+<RadzenDataGrid Data="@Streamers" TItem="StreamerModel" PagerPosition="PagerPosition.Bottom" AllowPaging="true" AllowSorting="true" PageSize="10" AllowFiltering=false @ref=grid
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+    <HeaderTemplate>
+        @Localizer["TotalsLabel"]: <b>@Streamers.Count()</b>
+        @Localizer["FilteredLabel"]: <b>@grid.View.Count()</b>
+    </HeaderTemplate>
+    <Columns>
+        <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.Id))" Title="Id" Filterable=false Reorderable=false Sortable=false />
+        <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.Id))" Title="@Localizer["ImageLabel"]" Filterable=false Reorderable=false Sortable=false>
+            <Template>
+                <img src="@context.ProfileImageUrl" alt="@context.DisplayName" class="profile-logo" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.Login))" Title="Username" />
+        <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.DisplayName))" Title="@Localizer["DisplayNameLabel"]" />
+        <RadzenDataGridColumn TItem="StreamerModel" Property="@(nameof(StreamerModel.IsClipDefault))" Title="@Localizer["IsClipDefaultLabel"]" Context="streamer">
+            <Template>
+                <span class="me-1 pointer" @onclick="async () => await DefaultChanged.InvokeAsync((StreamerModel)streamer)">
+                    <i class="ph ph-star @(((StreamerModel)streamer).IsClipDefault ? "selected" : "")"></i>
+                </span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="StreamerModel" Title="@Localizer["ActionsLabel"]" Context="streamer" Filterable=false Reorderable=false Sortable=false TextAlign="TextAlign.Center">
+            <Template>
+                <a href="/streamer/@streamer.Id" class="text-decoration-none text-black">
+                    <i class="ph ph-note-pencil grid-icon"></i>
+                </a>
+                <a href="/clips?streamer=@streamer.Id" class="text-decoration-none text-black">
+                    <i class="ph ph-film-reel grid-icon"></i>
+                </a>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+
+    [Parameter]
+    public ICollection<StreamerModel> Streamers { get; set; }
+
+    [Parameter]
+    public EventCallback<StreamerModel> DefaultChanged { get; set; }
+
+    RadzenDataGrid<StreamerModel> grid;
+}

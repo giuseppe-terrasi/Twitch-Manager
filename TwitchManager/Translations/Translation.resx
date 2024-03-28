@@ -207,6 +207,9 @@
   <data name="GenericErrorMessage" xml:space="preserve">
     <value>Si è verificato un errore</value>
   </data>
+  <data name="GoToClipsLabel" xml:space="preserve">
+    <value>Vai alle clip</value>
+  </data>
   <data name="ImageLabel" xml:space="preserve">
     <value>Immagine</value>
   </data>
@@ -230,6 +233,9 @@
   </data>
   <data name="NoClipsFoundLabel" xml:space="preserve">
     <value>Lo streamer selezionato non ha nessuna clip oppure devono essere ancora sincronizzate (la sincronizzazione avviene ogni ora)</value>
+  </data>
+  <data name="NoDefaultStreamerSelected" xml:space="preserve">
+    <value>Non hai ancora selezionato uno streamer predefinito per la pagina delle clip. Scegline uno cliccando sull'icona della stella.</value>
   </data>
   <data name="NoStreamerImportedLabel" xml:space="preserve">
     <value>Nessuno streamer importato</value>
