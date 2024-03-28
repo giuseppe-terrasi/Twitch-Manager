@@ -5,6 +5,7 @@
 @using Microsoft.Extensions.Options
 @using TwitchManager.Components.Layout
 @using TwitchManager.Models.General
+@using TwitchManager.Services.Abstractions
 @using TwitchManager.Translations
 
 @inject IOptionsMonitor<ConfigData> OptionsMonitor
@@ -15,6 +16,7 @@
 @inject IStringLocalizer<Translation> Localizer  
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IStreamerService StreamerService
 
 @layout EmptyLayout
 
@@ -58,7 +60,18 @@
 
         if(user.Identity.IsAuthenticated || Result == "ok")
         {
-            NavigationManager.NavigateTo("/clips", true);
+            var redirectUrl = "";
+
+            if(await StreamerService.UserHasAnyStreamer())
+            {
+                redirectUrl = "/clips";
+            }
+            else
+            {
+                redirectUrl = "/streamers";
+            }
+
+            NavigationManager.NavigateTo(redirectUrl, true);
             return;
         }
 

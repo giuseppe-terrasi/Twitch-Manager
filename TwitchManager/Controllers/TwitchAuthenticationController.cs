@@ -12,11 +12,12 @@ using TwitchManager.Data.DbContexts;
 using TwitchManager.Data.Domains;
 using TwitchManager.Models.Api.Clips.Responses;
 using TwitchManager.Models.General;
+using TwitchManager.Services.Abstractions;
 
 namespace TwitchManager.Controllers
 {
     [Route("[controller]")]
-    public class TwitchAuthenticationController(IOptionsMonitor<ConfigData> optionsMonitor, IDbContextFactory<TwitchManagerDbContext> dbContextFactory) : Controller
+    public class TwitchAuthenticationController(IOptionsMonitor<ConfigData> optionsMonitor, IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IStreamerService streamerService) : Controller
     {
 
         [HttpGet]
@@ -86,7 +87,18 @@ namespace TwitchManager.Controllers
 
             await HttpContext.SignInAsync(TwitchManagerAuthenticationOptions.AuthenticationScheme, principal);
 
-            return Redirect("/clips");
+            var redirectUrl = "";
+
+            if (await streamerService.UserHasAnyStreamer())
+            {
+                redirectUrl = "/clips";
+            }
+            else
+            {
+                redirectUrl = "/streamers";
+            }
+
+            return Redirect(redirectUrl);
         }
 
         private class TwitchToken
