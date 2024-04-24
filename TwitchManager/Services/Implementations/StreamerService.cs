@@ -18,11 +18,18 @@ namespace TwitchManager.Services.Implementations
         public async Task<ICollection<StreamerModel>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            var userId = httpContextAccessor.HttpContext.User.GetUserId();
+            var userId = httpContextAccessor.HttpContext?.User?.GetUserId();
 
-            var streamers = await context.Streamers
-                    .Include(s => s.UserStreamers.Where(s => s.UserId == userId && s.IsClipDefault))
-                    .Select(c => mapper.Map<StreamerModel>(c))
+            var query = context.Streamers.AsQueryable();
+
+            if(userId is not null)
+            {
+                query = query
+                    .Include(s => s.UserStreamers.Where(s => s.UserId == userId && s.IsClipDefault));
+            }
+
+
+            var streamers = await query.Select(c => mapper.Map<StreamerModel>(c))
                     .ToListAsync(cancellationToken);
 
             return streamers;

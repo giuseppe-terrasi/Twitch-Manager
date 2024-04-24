@@ -17,11 +17,16 @@ namespace TwitchManager.AutomapperProfiles
 
             CreateMap<StreamerModel, Data.Domains.Streamer>()
                 .ReverseMap()
-                .ForMember(m => m.IsClipDefault, opt => opt.MapFrom(s => s.UserStreamers.Where(s => s.IsClipDefault).Any()));
+                .ForMember(m => m.IsClipDefault, opt => opt.MapFrom(s => IsClipDefault(s)));
 
             CreateMap<Data.Domains.UserStreamer, StreamerModel>()
                 .ForMember(m => m.Id, opt => opt.MapFrom(us => us.Streamer.Id))
                 .IncludeMembers(us => us.Streamer);
+        }
+
+        private static bool IsClipDefault(Data.Domains.Streamer streamer)
+        {
+            return streamer.UserStreamers?.Where(s => s.IsClipDefault).Any() ?? false;
         }
     }
 }

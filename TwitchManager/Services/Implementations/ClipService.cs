@@ -64,10 +64,9 @@ namespace TwitchManager.Services.Implementations
                 .Include(c => c.Game)
                 .Include(c => c.ClipVotes)
                 .Where(c => c.Id == id)
-                .Select(c => mapper.Map<ClipModel>(c, opt => SetVotesInfo(opt, userId)))
                 .FirstOrDefaultAsync();
 
-            return clip;
+            return mapper.Map<ClipModel>(clip, opt => SetVotesInfo(opt, userId));
         }
 
         public async Task GetFromApiAsync(string streamerId, CancellationToken cancellationToken = default)
