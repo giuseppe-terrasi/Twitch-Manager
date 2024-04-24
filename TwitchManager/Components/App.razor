@@ -10,8 +10,9 @@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="TwitchManager.styles.css" />
     <link rel="stylesheet" href="bootstrap.min.css">
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css">
-    <link rel="icon" type="image/x-icon" href="img/favicon.ico?v1">
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
+    <link rel="stylesheet" href="css/cropper.min.css" />
+    <link rel="icon" type="image/x-icon" href="img/favicon.ico?v1" />
     <template id="phosphor-links" data-permanent>
     </template>
     <title>Twitch Manager</title>
@@ -22,6 +23,8 @@
     <Routes />
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="/js/cropper.min.js"></script>
+    <script src="/js/cropper-helper.js"></script>
     <script>
         var head = document.getElementById("phosphor-links");
 
@@ -79,12 +82,20 @@
         }
 
         async function saveFile(streamRef, filename) {
-            const stream = await streamRef.stream();
-            //const file = new Blob([stream], { type: "text/plain" });
-            const handle = await window.downloadDir.getFileHandle(filename, { create: true });
-            const writable = await handle.createWritable();
-            await stream.pipeTo(writable);
+            const arrayBuffer = await streamRef.arrayBuffer();
+            const blob = new Blob([arrayBuffer]);
+            //const handle = await window.downloadDir.getFileHandle(filename, { create: true });
+            //const writable = await handle.createWritable();
+            //await stream.pipeTo(writable);
             //await writable.close();
+            url = window.URL.createObjectURL(blob);
+            var a = document.createElement("a");
+            document.body.appendChild(a);
+            a.style = "display: none";
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
         }
     </script>
 </body>

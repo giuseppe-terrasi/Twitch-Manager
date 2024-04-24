@@ -13,7 +13,9 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
-
+	<PropertyGroup>
+		<ContainerDevelopmentMode>Regular</ContainerDevelopmentMode>
+	</PropertyGroup>
 	<!--<ItemGroup>
 		<EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="Always">
 			<LogicalName>
@@ -49,6 +51,12 @@
 
 	<ItemGroup>
 	  <Folder Include="Migrations\Sqlite\" />
+	  <Folder Include="wwwroot\img\tmp\" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <ProjectReference Include="..\FFMEPGWrapper\FFMEPGWrapper.csproj" />
 	</ItemGroup>
 
 	

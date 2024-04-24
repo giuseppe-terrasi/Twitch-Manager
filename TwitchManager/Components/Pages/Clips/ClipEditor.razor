@@ -1,0 +1,147 @@
+﻿@page "/edit-clip/{id}"
+
+@using FFMEPGWrapper
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Components.Popups
+@using TwitchManager.Helpers
+@using TwitchManager.Models.Clips
+@using TwitchManager.Services.Abstractions
+
+
+@inherits BaseComponent
+@inject IClipService ClipService
+@inject DialogService DialogService
+
+@inject IJSRuntime JSRuntime
+@inject ILogger<ClipEditor> Logger
+
+@rendermode InteractiveServerNotPrerendered
+
+@if(_clip != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <h1>@_clip.Title</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-5">
+            <div class="row">
+                <div class="col-12">
+                    <p>
+                        1. <button type="button" class="btn btn-link" @onclick="() => _currentSelector = 1">
+                            Seleziona
+                           </button>
+                           la porzione di video per la cam
+
+                        @if (_camData != null)
+                        {
+                            <img src="@_camData.Image" />
+                        }
+                    </p>
+
+                    @if(_camData != null)
+                    {
+                        <p>
+                            2. <button type="button" class="btn btn-link" @onclick="() => _currentSelector = 2">
+                                Seleziona
+                            </button>
+                            la porzione di video per il centro
+
+                            @if (_centerClip != null)
+                            {
+                                <img src="@_centerClip.Image" />
+                            }
+                        </p>
+                    }
+
+                    @if(_camData != null && _centerClip != null)
+                    {
+                        <p>
+                            3. Scarica la clip
+                        </p>
+                        <button type="button" class="btn btn-primary" @onclick="async () => await Save()">
+                            Scarica
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+        @if (_currentSelector > 0)
+        {
+            <div class="col-7 overflow-x-hidden">
+                <ImageCropper ImageUrl="@_clip.ThumbnailUrl" OnCrop="OnCrop" />
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public string Id { get; set; }
+
+    private ClipModel _clip;
+
+    private ImageCropper.ImageCropperData _camData, _centerClip;
+
+    private int _currentSelector = 0;
+
+    private FFMPEG FFMPEG;
+
+    protected override async Task OnInitializedAsync()
+    {
+        FFMPEG = new FFMPEG(Logger);
+        await ExecuteAsync(async () =>
+        {
+            _clip = await ClipService.GetByIdAsync(Id);
+        });
+    }
+
+    private void OnCrop(ImageCropper.ImageCropperData data)
+    {
+        if (_currentSelector == 1)
+        {
+            _camData = data;
+        }
+        else
+        {
+            _centerClip = data;
+        }
+
+        _currentSelector = 0;   
+    }
+
+    private async Task Save()
+    {
+        await ExecuteAsync(async () =>
+        {
+            FFMPEG
+            .ClearFilters()
+            .AddFilterGroup(new FilterGroup("top", "[0:v]")
+                .AddFilter(new CropFilter(_camData.X, _camData.Y, _camData.Width, _camData.Height))
+                .AddFilter(new PaddingFilter(0, 0, _centerClip.Width, _camData.Height, "black"))
+            )
+            .AddFilterGroup(new FilterGroup("bottom", "[0:v]")
+                .AddFilter(new CropFilter(_centerClip.X, _centerClip.Y, _centerClip.Width, _centerClip.Height))
+            )
+            .AddFilterGroup(new FilterGroup()
+                .AddFilter(new VStackFilter("top", "bottom"))
+            );
+            // .AddFilterGroup(new FilterGroup()
+            //     .AddFilter(new OverlayFilter("stacked", "[1:v]", _camData.X + 20, _camData.Height / 2))
+            // );
+
+            await DialogService.OpenAsync<ClipDownloadPopup>(Localizer["DownloadSelectedTitle"], new Dictionary<string, object>()
+            {
+            { "Clips", new List<ClipModel>(){ _clip } }, { "DialogService", DialogService }, { "FFMPEG", FFMPEG }
+            }, new DialogOptions()
+            {
+                CloseDialogOnEsc = false,
+                CloseDialogOnOverlayClick = false,
+                ShowClose = false
+            });
+        });
+    }
+}

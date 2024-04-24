@@ -349,3 +349,13 @@ table td {
 .ph-star.selected {
     color: #d5ac0c;
 }
+
+.crop-preview {
+    border: 1px solid #00000033;
+    max-height: 540px;
+}
+
+.crop-preview img {
+    width: 100%;
+    height: auto;
+}
