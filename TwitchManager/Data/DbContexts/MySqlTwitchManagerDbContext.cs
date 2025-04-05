@@ -18,7 +18,7 @@ namespace TwitchManager.Data.DbContexts
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     o.EnableStringComparisonTranslations();
                 })
-                .LogTo(Console.WriteLine, LogLevel.Information)
+                .LogTo(Console.WriteLine, LogLevel.Warning)
                 .EnableSensitiveDataLogging(true);
         }
     }

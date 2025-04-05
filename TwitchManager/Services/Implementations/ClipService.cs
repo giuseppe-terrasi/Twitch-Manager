@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.Extensions.ExpressionMapping;
+using AutoMapper.Extensions.ExpressionMapping.Impl;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -79,13 +80,13 @@ namespace TwitchManager.Services.Implementations
                 .Where(c => c.BroadcasterId == streamerId)  
                 .MaxAsync(c => (DateTime?)c.CreatedAt, cancellationToken);
 
-            var from = maxDate == null ? "" : maxDate.Value.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var from = maxDate == null ? "" : maxDate.Value.Date.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
             var cursor = "";
 
             do
             {
-                var request = new GetClipsHttpRequestMessage(broadcasterId: streamerId, first: "100", startedAt: from, after: cursor);
+                var request = new GetClipsHttpRequestMessage(broadcasterId: streamerId, startedAt: from, after: cursor);
 
                 var response = await client.SendAsync(request, cancellationToken);
 
@@ -125,13 +126,19 @@ namespace TwitchManager.Services.Implementations
 
                     try
                     {
+                        var exists = await context.Clips.AnyAsync(c => c.Id == clip.Id, cancellationToken);
+
+                        if (exists)
+                        {
+                            continue;
+                        }
+
                         context.Clips.Add(clip);
 
                         await context.SaveChangesAsync(cancellationToken);
                     }
                     catch
                     {
-                        context.Entry(clip).State = EntityState.Detached;
                     }
                 }
 
@@ -152,17 +159,28 @@ namespace TwitchManager.Services.Implementations
                     var context = dbContextFactory.CreateDbContext();
                     var userId = httpContextAccessor.HttpContext.User.GetUserId();
 
-                    var query = context.Clips
+                    IQueryable<ClipModel> query;
+
+                    if(filterModel.IsRandom)
+                    {
+                        query = context.RandomClips
+                        .Include(c => c.Game)   
+                        .Where(c => c.BroadcasterId == filterModel.StreamerId)
+                        .UseAsDataSource(mapper).For<ClipModel>();
+                    }
+                    else
+                    {
+                        query = context.Clips
                         .Where(c => c.BroadcasterId == filterModel.StreamerId)
                         .UseAsDataSource(mapper).For<ClipModel>()
                         .OnEnumerated(c =>
                         {
-                            foreach(var clip in c.Cast<ClipModel>())
+                            foreach (var clip in c.Cast<ClipModel>())
                             {
                                 clip.IsUserVoted = context.ClipVotes.Any(v => v.ClipId == clip.Id && v.UserId == userId);
                             }
-                        })
-                        .AsQueryable();
+                        });
+                    }
 
                     if (filterModel.Filters != null)
                     {
@@ -198,15 +216,21 @@ namespace TwitchManager.Services.Implementations
 
         public async Task VoteAsync(string clipId, bool isUpVote)
         {
+            var userId = httpContextAccessor.HttpContext.User.GetUserId();
+
+            await VoteAsync(clipId, userId, isUpVote);
+
+        }
+
+        public async Task VoteAsync(string clipId, string userId, bool isUpVote)
+        {
             var context = await dbContextFactory.CreateDbContextAsync();
 
-            var userId = httpContextAccessor.HttpContext.User.GetUserId();
-           
-            if(isUpVote)
+            if (isUpVote)
             {
                 var upVote = new ClipVote
                 {
-                    Id = Guid.NewGuid().ToString(), 
+                    Id = Guid.NewGuid().ToString(),
                     ClipId = clipId,
                     UserId = userId
                 };
@@ -219,7 +243,7 @@ namespace TwitchManager.Services.Implementations
                     .Where(v => v.ClipId == clipId && v.UserId == userId)
                     .FirstOrDefaultAsync();
 
-                if(vote != null)
+                if (vote != null)
                 {
                     context.ClipVotes.Remove(vote);
                 }
@@ -229,12 +253,56 @@ namespace TwitchManager.Services.Implementations
             {
                 await context.SaveChangesAsync();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                logger.LogError(e, "Error while voting");  
+                logger.LogError(e, "Error while voting");
                 throw new Exception("Error while voting", e);
             }
+        }
 
+        public async Task VoteAsync(string clipId, string userId)
+        {
+            var context = await dbContextFactory.CreateDbContextAsync();
+
+            var user = await context.Users.Where(u => u.TwitchId == userId).FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                user = new User
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    TwitchId = userId,
+                    CreatedOn = DateTime.Now
+                };
+
+                context.Users.Add(user);
+
+                await context.SaveChangesAsync();
+            }
+
+            userId = user.Id;
+
+            var vote = await context.ClipVotes
+                .Where(v => v.ClipId == clipId && v.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (vote != null)
+            {
+                context.ClipVotes.Remove(vote);
+            }
+            else
+            {
+                vote = new ClipVote
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ClipId = clipId,
+                    UserId = userId
+                };
+
+                context.ClipVotes.Add(vote);
+            }
+
+            await context.SaveChangesAsync();
         }
 
         public async Task<int> GetTotalByStremaerAsync(string streamerId)

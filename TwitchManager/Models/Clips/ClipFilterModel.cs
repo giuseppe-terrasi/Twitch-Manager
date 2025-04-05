@@ -13,5 +13,7 @@ namespace TwitchManager.Models.Clips
         public ICollection<Expression<Func<ClipModel, bool>>> Filters { get; set; }
 
         public string OrderBy { get; set; }
+
+        public bool IsRandom { get; set; }
     }
 }

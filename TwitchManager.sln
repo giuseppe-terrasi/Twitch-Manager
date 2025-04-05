@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwitchManager", "TwitchMana
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{E28E915A-9E96-4BD8-A6ED-8604F00AAEE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FFMEPGWrapper", "FFMEPGWrapper\FFMEPGWrapper.csproj", "{DD745318-8C2C-4DD0-8F5F-23FE2A16702F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FFMEPGWrapper", "FFMEPGWrapper\FFMEPGWrapper.csproj", "{DD745318-8C2C-4DD0-8F5F-23FE2A16702F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

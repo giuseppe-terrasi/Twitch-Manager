@@ -23,5 +23,5 @@ RUN dotnet publish "./TwitchManager.csproj" -c $BUILD_CONFIGURATION -o /app/publ
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-RUN apt update && apt install -y ffmpeg
+#RUN apt update && apt install -y ffmpeg
 ENTRYPOINT ["dotnet", "TwitchManager.dll"]

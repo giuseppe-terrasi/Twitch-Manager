@@ -1,0 +1,118 @@
+﻿@page "/event-subscriptions"
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Components.Popups
+@using TwitchManager.Helpers
+@using TwitchManager.Models.Api.Events
+@using TwitchManager.Services.Abstractions
+
+@rendermode InteractiveServerNotPrerendered
+
+@inject ITwichEventService TwitchEventService
+@inject DialogService DialogService
+@inject IHttpContextAccessor HttpContextAccessor
+
+@inherits BaseComponent
+
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>
+    @Localizer["EventSubdPageTitle"]
+</PageTitle>
+
+<div class="row page-title">
+    <div class="col-8">
+        <h1>
+            @Localizer["EventSubdPageTitle"]
+        </h1>
+    </div>
+    <div class="col-4 d-flex justify-content-end">
+        <button class="btn btn-primary d-flex justify-content-center align-items-center" @onclick="async () => await AddNewAsync()">
+            @Localizer["AddEventSubLabel"] <i class="ph ph-twitch-logo ms-3"></i>
+        </button>
+    </div>
+</div>
+
+@if (_loaded && eventSubs.Count == 0)
+{
+    <div class="mt-3">
+        <div class="col-12">
+            <span>
+                @Localizer["NoDefaultStreamerSelected"]
+            </span>
+        </div>
+    </div>
+}
+
+<div class="row mt-3">
+    <div class="col-12 table-responsive">
+        <RadzenDataGrid Data="@eventSubs" TItem="EventSubModel" PagerPosition="PagerPosition.Bottom" AllowPaging="true" AllowSorting="true" PageSize="10" AllowFiltering=false @ref=grid
+        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive">
+            <HeaderTemplate>
+                @Localizer["TotalsLabel"]: <b>@eventSubs.Count()</b>
+                @Localizer["FilteredLabel"]: <b>@grid.View.Count()</b>
+            </HeaderTemplate>
+            <Columns>
+                <RadzenDataGridColumn TItem="EventSubModel" Property="@nameof(EventSubModel.Id)" Title="Id" Filterable=false Reorderable=false Sortable=false />
+                <RadzenDataGridColumn TItem="EventSubModel" Property="@nameof(EventSubModel.TwitchEventId)" Title="Twitch Event Id" Filterable=false Reorderable=false Sortable=false />
+                <RadzenDataGridColumn TItem="EventSubModel" Property="@nameof(EventSubModel.Type)" Title="Event Name" />
+                <RadzenDataGridColumn TItem="EventSubModel" Title="Status">
+                    <Template>
+                        @context.Status.ToString()
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="EventSubModel" Title="@Localizer["ActionsLabel"]" Context="eventSub" Filterable=false Reorderable=false Sortable=false TextAlign="TextAlign.Center">
+                    <Template>
+
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+</div>
+
+@code {
+    private ICollection<EventSubModel> eventSubs = new List<EventSubModel>();
+
+    private bool _loaded = false;
+    private string _streamerId;
+
+    RadzenDataGrid<EventSubModel> grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ExecuteAsync(async () =>
+        {
+            _streamerId = "136110155";//HttpContextAccessor.HttpContext.User.GetUserTwitchId();
+
+            await LoadEventsAsync();
+
+            _loaded = true;
+        });
+    }
+
+
+    private async Task AddNewAsync() {
+        var toAdd = await DialogService.OpenAsync<AddTwitchEventPopup>("Aggiungi evento Twitch", new Dictionary<string, object>()
+        {
+            { "DialogService", DialogService },
+            { "StreamerId", _streamerId }
+        });
+
+        if (toAdd != null)
+        {
+            await ExecuteAsync(async () =>
+            {
+                await TwitchEventService.SubscribeAsync(toAdd, _streamerId, CancellationToken.None);
+
+                await LoadEventsAsync();
+
+            });
+        }
+    }
+
+    private async Task LoadEventsAsync()
+    {
+        eventSubs = await TwitchEventService.GetSubscriptionsAsync(_streamerId, CancellationToken.None);
+        _loaded = true;
+    }
+}

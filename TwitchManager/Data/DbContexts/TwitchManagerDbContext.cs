@@ -15,9 +15,21 @@ namespace TwitchManager.Data.DbContexts
 
         public DbSet<User> Users { get; set; }
 
+        public DbSet<BotUser> BotUsers { get; set; }
+
         public DbSet<ClipVote> ClipVotes { get; set; }
 
         public DbSet<UserStreamer> UserStreamers { get; set; }
+
+        public DbSet<RandomClip> RandomClips { get; set; }
+
+        public DbSet<Chat> Chats { get; set; }
+
+        public DbSet<EventSub> EventSubs { get; set; }
+
+        public DbSet<StreamerVotedGame> StreamerVotedGames { get; set; }
+
+        public DbSet<TelegramChat> TelegramChats { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

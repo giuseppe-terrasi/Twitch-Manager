@@ -37,9 +37,9 @@ namespace TwitchManager.Components.Abstractions
             await ShowErrorPopupAsync(Localizer["GenericErrorMessage"]);
         }
 
-        protected async Task ExecuteAsync(Func<Task> task, Func<Task> onSuccess = null, Func<Exception, Task> onError = null)
+        protected async Task ExecuteAsync(Func<Task> task, Func<Task> onSuccess = null, Func<Exception, Task> onError = null, string spinnerColor = "")
         {
-            await SetLoadingAsync(true);
+            await SetLoadingAsync(true, spinnerColor);
 
             try
             {

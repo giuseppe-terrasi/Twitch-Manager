@@ -16,5 +16,9 @@
         public virtual ICollection<Clip> Clips { get; set; }
 
         public virtual ICollection<UserStreamer> UserStreamers { get; set; }
+
+        public virtual ICollection<Chat> ChatMessages { get; set; }
+
+        public virtual ICollection<EventSub> EventSubs { get; set; }
     }
 }

@@ -1,0 +1,37 @@
+﻿@page "/events/receive-alert"
+
+<div id="message">
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+<script>
+    var channelId = "136110155";
+
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("https://localhost:7037/alertHub", { transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling })
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+    async function start() {
+        try {
+            await connection.start();
+            console.log("SignalR Connected.");
+            connection.invoke("JoinAlerts", channelId).catch(function (err) {
+              return console.error(err.toString());
+            });
+        } catch (err) {
+            console.log(err);
+            setTimeout(start, 5000);
+        }
+    };
+
+    connection.onclose(async () => {
+      await start();
+    });
+
+    connection.on("Follow", function (message) {
+      console.log("Follow Data: " + message);
+      $("#message").html(message);
+    });
+</script>

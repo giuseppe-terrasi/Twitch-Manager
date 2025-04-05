@@ -22,6 +22,8 @@
         public bool IsFeatured { get; set; }
         public bool IsUserVoted { get; set; }
 
+        public string DownloadLink { get; set; }
+
         public int Votes { get; set; }
 
         public string VideoUrl { get; set; }

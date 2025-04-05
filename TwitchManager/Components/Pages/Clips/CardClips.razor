@@ -31,10 +31,14 @@
                 </div>
                 <div class="row mt-3">
                     <div class="col-12 px-4 pb-2 d-flex justify-content-between">
-                        <span class="d-flex align-items-start">
-                            <i class="ph ph-heart pointer me-2 @(clip.IsUserVoted ? "fill" : "") grid-icon" @onclick="() => Vote(clip)"></i> 
-                            @Localizer["LikesLabel"]: @clip.Votes
-                        </span>
+                        <Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
+                            <Authorized>
+                                <span class="d-flex align-items-start">
+                                    <i class="ph ph-heart pointer me-2 @(clip.IsUserVoted ? "fill" : "") grid-icon" @onclick="() => Vote(clip)"></i>
+                                    @Localizer["LikesLabel"]: @clip.Votes
+                                </span>
+                            </Authorized>
+                        </Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
                         <span>by @clip.CreatorName</span>
                     </div>
                 </div>

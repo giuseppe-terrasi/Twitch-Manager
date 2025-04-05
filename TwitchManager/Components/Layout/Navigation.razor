@@ -5,6 +5,8 @@
 
 @inherits BaseComponent
 
+@inject TwitchAuthUrlBuilder TwitchAuthUrlBuilder
+
 <RadzenHeader>
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
         <div class="logo-container">
@@ -30,26 +32,32 @@
                     </a>
                 </div>
             </Authorized>
+            <NotAuthorized>
+                <div class="w-100 d-flex align-items-center justify-content-end py-3 pe-3">
+                    <a href="@loginUrl" class="btn btn-primary d-flex align-items-center justify-content-center white" style="color: #FFFFFF !important">
+
+                        @Localizer["LoginWithTwitchLabel"] <i class="ph ph-twitch-logo ms-1"></i>
+                    </a>
+                </div>
+            </NotAuthorized>
         </AuthorizeView>
     </RadzenStack>
 </RadzenHeader>
 <RadzenSidebar @bind-Expanded="@sidebar1Expanded" @bind-Responsive="responsive">
-    <AuthorizeView>
-        <Authorized>
-            <AuthorizeView Policy="@TwitchManagerAuthenticationOptions.ConfiguredPolicy" Context="inner">
-                <Authorized>
-                    <div class="col-auto">
-                        <NavMenu />
-                    </div>
-                </Authorized>
-            </AuthorizeView>
-        </Authorized>
-    </AuthorizeView>
+    <div class="col-auto">
+        <NavMenu />
+    </div>
 </RadzenSidebar>
 
 @code {
     bool sidebar1Expanded = false;
     bool responsive = false;
+    private string loginUrl = "";
+
+    protected override void OnInitialized()
+    {
+        loginUrl = TwitchAuthUrlBuilder.BuildAuthUrl();
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {

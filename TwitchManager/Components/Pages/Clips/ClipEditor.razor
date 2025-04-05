@@ -126,8 +126,12 @@
             .AddFilterGroup(new FilterGroup("bottom", "[0:v]")
                 .AddFilter(new CropFilter(_centerClip.X, _centerClip.Y, _centerClip.Width, _centerClip.Height))
             )
-            .AddFilterGroup(new FilterGroup()
+            .AddFilterGroup(new FilterGroup("stacked")
                 .AddFilter(new VStackFilter("top", "bottom"))
+            )
+            .AddFilterGroup(new FilterGroup("", "[stacked]")
+                .AddFilter(new ScaleFilter(1080, 1920, ForceOriginalAspectRatio.Increase))
+                .AddFilter(PaddingFilter.Center(1080,1920, "black"))
             );
             // .AddFilterGroup(new FilterGroup()
             //     .AddFilter(new OverlayFilter("stacked", "[1:v]", _camData.X + 20, _camData.Height / 2))

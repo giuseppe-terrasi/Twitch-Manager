@@ -17,9 +17,13 @@
                 <div class="row mt-1">
                     <div class="col-12 px-4 d-flex justify-content-between">
                         <small>@streamer.DisplayName</small>
-                        <span class="me-1 pointer" @onclick="async () => await DefaultChanged.InvokeAsync((StreamerModel)streamer)">
-                            <i class="ph ph-star @(((StreamerModel)streamer).IsClipDefault ? "selected" : "")"></i>
-                        </span>
+                        <Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
+                            <Authorized>
+                                <span class="me-1 pointer" @onclick="async () => await DefaultChanged.InvokeAsync((StreamerModel)streamer)">
+                                    <i class="ph ph-star @(((StreamerModel)streamer).IsClipDefault ? "selected" : "")"></i>
+                                </span>
+                            </Authorized>
+                        </Microsoft.AspNetCore.Components.Authorization.AuthorizeView>
                     </div>
                 </div>
                 <div class="row">

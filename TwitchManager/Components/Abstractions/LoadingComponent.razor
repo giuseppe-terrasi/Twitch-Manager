@@ -2,7 +2,7 @@
 
 @if (_isLoading)
 {
-    <div class="w-100 spinner">
+    <div class="w-100 spinner @_spinnerColor">
     </div>
     <div class="spinner-border" role="status">
         <span class="sr-only"></span>
@@ -23,8 +23,9 @@
     private bool _showPopup;
     private bool _errorPopup;
     private string _popupMessage;
+    private string _spinnerColor;
 
-    protected async Task SetLoadingAsync(bool isLoading)
+    protected async Task SetLoadingAsync(bool isLoading, string spinnerColor = "")
     {
         if (isLoading)
         {
@@ -36,6 +37,7 @@
         }
 
         _isLoading = _loadingStack.Any();
+        _spinnerColor = spinnerColor;
 
         await InvokeAsync(StateHasChanged);
     }

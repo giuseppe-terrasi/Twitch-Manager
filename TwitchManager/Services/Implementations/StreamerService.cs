@@ -40,9 +40,16 @@ namespace TwitchManager.Services.Implementations
             var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             var userId = httpContextAccessor.HttpContext.User.GetUserId();
 
-            var streamers = await context.UserStreamers
+            var query = context.UserStreamers
                 .Include(us => us.Streamer)
-                .Where(us => us.UserId == userId)
+                .AsQueryable();
+
+            if(!string.IsNullOrEmpty(userId))
+            {
+                query = query.Where(us => us.UserId == userId);
+            }
+
+            var streamers = await query
                 .Select(c => mapper.Map<StreamerModel>(c))
                 .ToListAsync(cancellationToken);
 

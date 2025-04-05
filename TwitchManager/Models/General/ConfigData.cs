@@ -48,6 +48,10 @@ namespace TwitchManager.Models.General
 
         public List<string> AdminUsers { get; set; } = [];
 
+        public string TelegramApiBaseUrl { get; set; }
+
+        public string TelegramBotToken { get; set; }
+
         [JsonIgnore]
         public string FilePath { 
             get

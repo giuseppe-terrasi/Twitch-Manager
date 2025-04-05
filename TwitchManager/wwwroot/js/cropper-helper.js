@@ -16,3 +16,15 @@ function getCroppedImage() {
     const dataUrl = canvas.toDataURL();
     return dataUrl;
 }
+
+function slideDiv(id) {
+    const slideDiv = document.getElementById(id);
+
+    setTimeout(() => {
+        slideDiv.classList.add('visible');
+    }, 1000);
+
+    setTimeout(() => {
+        slideDiv.classList.remove('visible');
+    }, 10000);
+}

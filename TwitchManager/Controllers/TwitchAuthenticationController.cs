@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -17,7 +19,7 @@ using TwitchManager.Services.Abstractions;
 namespace TwitchManager.Controllers
 {
     [Route("[controller]")]
-    public class TwitchAuthenticationController(IOptionsMonitor<ConfigData> optionsMonitor, IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IStreamerService streamerService) : Controller
+    public class TwitchAuthenticationController(IOptionsMonitor<ConfigData> optionsMonitor, IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IStreamerService streamerService, IAuthenticationService authenticationService) : Controller
     {
 
         [HttpGet]
@@ -99,6 +101,37 @@ namespace TwitchManager.Controllers
             }
 
             return Redirect(redirectUrl);
+        }
+
+        [HttpGet("bot-authorize")]
+        [Authorize(AuthenticationSchemes = TwitchManagerAuthenticationOptions.BotAuthenticationScheme)]
+        public async Task<IActionResult> BotAuthorize()
+        {
+            using var dbcontext = await dbContextFactory.CreateDbContextAsync();
+
+            var result = await authenticationService.AuthenticateAsync(HttpContext, TwitchManagerAuthenticationOptions.BotAuthenticationScheme);
+
+            var botUser = await dbcontext.BotUsers.Where(u => u.TwitchId == User.Identity.Name).FirstOrDefaultAsync();
+
+            if (botUser == null)
+            {
+                botUser = new BotUser
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    TwitchId = User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).FirstOrDefault(),
+                    CreatedOn = DateTime.UtcNow,
+                };
+                dbcontext.BotUsers.Add(botUser);
+            }
+
+            botUser.AccessToken = result.Properties.GetTokenValue("access_token");
+            botUser.RefreshToken = result.Properties.GetTokenValue("refresh_token");
+            botUser.ExpirationDate = DateTime.Parse(result.Properties.GetTokenValue("expires_at"));
+            botUser.IdToken = result.Properties.GetTokenValue("id_token");
+
+            await dbcontext.SaveChangesAsync();
+
+            return Ok("ok");
         }
 
         private class TwitchToken

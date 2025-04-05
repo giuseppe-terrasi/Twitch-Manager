@@ -149,7 +149,8 @@ label {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    z-index: 999999;
+    z-index: 999998;
+    object-fit: fill;
 }
 
 .waiting {
@@ -358,4 +359,61 @@ table td {
 .crop-preview img {
     width: 100%;
     height: auto;
+}
+
+.random-clip-container {
+    background-color: #000000;
+    height: 100vh;
+}
+
+.random-clip-data {
+    position: fixed;
+    bottom: 50px;
+    background-color: #3f3f3f;
+    color: #000000;
+    padding: 25px 15px;
+    z-index: 999999;
+    border-radius: 5px;
+    min-width: 500px;
+    font-size: 30px;
+    max-width: 1800px;
+}
+
+.slide-in {
+
+    left: -100%; /* Initially off-screen */
+    transform: translateY(-50%);
+    transition: left 0.5s ease-in-out;
+}
+
+.visible {
+    left: 20px; /* Move on-screen */
+}
+
+.title {
+    font-weight: bold;
+    color: #afafaf;
+    font-size: 45px;
+}
+
+.random-clip-data .metadata {
+    font-size: 30px;
+    color: #000000;
+}
+
+    .random-clip-data .metadata span {
+        font-weight: bold;
+        color: #afafaf;
+    }
+
+.bg-black {
+    background-color: #000000 !important;
+}
+
+.rz-dropdown-panel.rz-popup {
+    z-index: 99996 !important;
+}
+
+.white {
+    color: #FFFFFF !important;
 }

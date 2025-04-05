@@ -1,0 +1,103 @@
+﻿@page "/random-clips/{streamerId}"
+
+@using Microsoft.AspNetCore.SignalR
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Components.Layout
+@using TwitchManager.Helpers
+@using TwitchManager.Hubs
+@using TwitchManager.Services.Abstractions
+
+@inherits BaseComponent
+@inject IClipService ClipService
+
+@inject IJSRuntime JSRuntime
+@inject IHubContext<ClipHub> ClipHub    
+@layout EmptyLayout
+@inject IHttpContextAccessor HttpContextAccessor
+
+@rendermode InteractiveServerNotPrerendered
+
+<div class="random-clip-container">
+    <video autoplay class="clip-iframe" src="@clip?.DownloadLink" @onended="async () => await StartClipAsync()" id="clip-video">
+    </video>
+
+    @if(clip != null)
+    {
+        <div class="random-clip-data slide-in" id="random-clip-data">
+            <div class="title">
+                @clip.Title
+            </div>
+            <div class="metadata">
+                Clipped by <span class="creator">@clip.CreatorName</span> 
+                while playing <span class="game">@clip.GameName</span> 
+                on <span class="date">
+                    @clip.CreatedAt.ToString("dd/MM/yyyy")
+                </span>
+            </div>
+        </div>
+    }
+
+</div>
+
+
+@code {
+    [Parameter]
+    public string StreamerId { get; set; }
+
+    string url = "";
+    bool show = false;
+    int skip = 0;
+    Models.Clips.ClipModel clip;
+
+    Queue<Models.Clips.ClipModel> clips = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SetLoadingAsync(true, "bg-black");
+        await LoadClipsAsync();
+        await StartClipAsync();
+    }
+
+    private async Task LoadClipsAsync()
+    {
+
+        var result = await ClipService.GetByStreamerAsync(new Models.Clips.ClipFilterModel() { StreamerId = StreamerId, Skip = skip, Take = 5, IsRandom = true });
+        foreach(var clip in result.Clips)
+        {
+            try
+            {
+                clip.DownloadLink = await ClipService.GetDownloadLinkAsync(clip.Id, CancellationToken.None);
+                clips.Enqueue(clip);
+            }
+            catch(Exception ex)
+            {
+                Logger.LogError(ex, "Error loading clip url");
+            }
+        };
+    }
+
+    private async Task StartClipAsync()
+    {
+        if (clips.Count > 0)
+        {
+            clip = clips.Dequeue();
+            show = true;
+            await InvokeAsync(StateHasChanged);
+
+            await ClipHub.Clients.Group(StreamerId).SendAsync("ReceiveClipData", clip);
+            await JSRuntime.InvokeVoidAsync("slideDiv", "random-clip-data");
+
+            if(clips.Count == 2)
+            {
+                skip += 5;
+                await LoadClipsAsync();
+            }
+
+            Logger.LogInformation("Remaining Clips: " + clips.Count);
+        }
+        else
+        {
+            await ClipHub.Clients.All.SendAsync("Hide");
+        }
+    }
+}
