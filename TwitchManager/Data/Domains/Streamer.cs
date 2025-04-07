@@ -20,5 +20,9 @@
         public virtual ICollection<Chat> ChatMessages { get; set; }
 
         public virtual ICollection<EventSub> EventSubs { get; set; }
+
+        public virtual ICollection<TelegramChat> TelegramChats { get; set; }
+
+        public virtual ICollection<DiscordChannel> DiscordChannels { get; set; }
     }
 }

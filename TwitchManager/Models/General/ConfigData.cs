@@ -52,6 +52,10 @@ namespace TwitchManager.Models.General
 
         public string TelegramBotToken { get; set; }
 
+        public string DiscordApiBaseUrl { get; set; }
+
+        public string DiscordBotToken { get; set; }
+
         [JsonIgnore]
         public string FilePath { 
             get

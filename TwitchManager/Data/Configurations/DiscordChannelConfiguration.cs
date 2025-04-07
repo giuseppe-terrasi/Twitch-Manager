@@ -5,19 +5,19 @@ using TwitchManager.Data.Domains;
 
 namespace TwitchManager.Data.Configurations
 {
-    public class TelegramChatConfiguration : IEntityTypeConfiguration<TelegramChat>
+    public class DiscordChannelConfiguration : IEntityTypeConfiguration<DiscordChannel>
     {
-        public void Configure(EntityTypeBuilder<TelegramChat> builder)
+        public void Configure(EntityTypeBuilder<DiscordChannel> builder)
         {
-            builder.ToTable("TelegramChats");
+            builder.ToTable("DiscordChannels");
 
             builder.HasKey(e => e.Id);
             builder.HasOne(x => x.Streamer)
-                .WithMany(x => x.TelegramChats)
+                .WithMany(x => x.DiscordChannels)
                 .HasForeignKey(e => e.StreamerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Property(e => e.ChatId)
+            builder.Property(e => e.ChannelId)
                 .IsRequired();
 
             builder.Property(e => e.StreamerId)

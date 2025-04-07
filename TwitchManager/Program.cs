@@ -32,6 +32,7 @@ using System.Text.Json.Nodes;
 using TwitchManager.Data.Domains;
 using TwitchManager.Comunications.TwicthApi.Api.Streamers;
 using Microsoft.EntityFrameworkCore.Internal;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +79,14 @@ builder.Services.AddHttpClient("Telegram")
     })
     .ConfigurePrimaryHttpMessageHandler((s) => new HttpClientHandler());
 
+builder.Services.AddHttpClient("Discord")
+    .ConfigureHttpClient((s, c) =>
+    {
+        var config = s.GetRequiredService<IOptionsMonitor<ConfigData>>().CurrentValue;
+        c.BaseAddress = new Uri(config.DiscordApiBaseUrl);
+        c.DefaultRequestHeaders.Add("Authorization", $"Bot {config.DiscordBotToken}");
+    })
+    .ConfigurePrimaryHttpMessageHandler((s) => new HttpClientHandler());
 
 builder.Services.AddDbContextFactory<TwitchManagerDbContext, TwitchManagerDbContextFactory>();
 
@@ -263,6 +272,61 @@ app.Map("/test-telegram", async (IHttpClientFactory httpClientFactory, IOptionsM
     var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
     var response = await httpClient.PostAsync($"/bot{config.TelegramBotToken}/sendPhoto", content);
+
+    var responseData = await response.Content.ReadAsStringAsync();
+});
+
+app.Map("/test-discord", async (IHttpClientFactory httpClientFactory, IOptionsMonitor<ConfigData> optionsMonitor,
+    IDbContextFactory<TwitchManagerDbContext> dbContextFactory) =>
+{
+    var httpClient = httpClientFactory.CreateClient("Discord");
+    var twitchHttpClient = httpClientFactory.CreateClient("TwitchApi");
+    var imageHttpClient = new HttpClient();
+
+    var twitchManagerDbContext = await dbContextFactory.CreateDbContextAsync();
+
+    var streamerId = "136110155";
+
+    var telegramChats = await twitchManagerDbContext.TelegramChats
+    .Include(t => t.Streamer)
+    .Where(x => x.StreamerId == streamerId)
+    .FirstOrDefaultAsync();
+
+    var cannelId = "1230797471261921281";
+
+    var request = new GetLiveInfoHttpRequestMessage(streamerId);
+    var channelInfoResponse = await twitchHttpClient.SendAsync(request);
+
+    var channelInfo = await request.GetDataAsync(channelInfoResponse);
+
+    var liveTitle = channelInfo.Data.FirstOrDefault()?.Title;
+    var thumbnailUrl = channelInfo.Data.FirstOrDefault()?.ThumbnailUrl ?? "";
+
+    thumbnailUrl = thumbnailUrl.Replace("{width}", "1920").Replace("{height}", "1080");
+
+    var message = $"{telegramChats.Streamer.DisplayName} è live!\r\n{liveTitle}\r\nhttps://www.twitch.tv/{telegramChats.Streamer.DisplayName}";
+
+    var config = optionsMonitor.CurrentValue;
+
+    var content = new MultipartFormDataContent();
+
+    var fileContent = new ByteArrayContent(await imageHttpClient.GetByteArrayAsync(thumbnailUrl));
+
+    fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+
+    var contentDisposition = new ContentDispositionHeaderValue("form-data")
+    {
+        Name = $"\"files[0]\"",
+        FileName = "image.jpg"
+    };
+    fileContent.Headers.ContentDisposition = contentDisposition;
+
+    content.Add(fileContent);
+    content.Headers.Add("Content-Disposition", "form-data; name=\"files[0]\"; filename=\"image.jpg\"");
+    content.Add(new StringContent(message), "content");
+
+
+    var response = await httpClient.PostAsync($"api/channels/{cannelId}/messages", content);
 
     var responseData = await response.Content.ReadAsStringAsync();
 });
