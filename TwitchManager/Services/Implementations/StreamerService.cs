@@ -2,19 +2,66 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+
+using System.Threading;
 
 using TwitchManager.Comunications.TwicthApi.Api.Clips;
 using TwitchManager.Data.DbContexts;
 using TwitchManager.Data.Domains;
 using TwitchManager.Helpers;
 using TwitchManager.Models.Api.Clips.Data;
+using TwitchManager.Models.General;
 using TwitchManager.Models.Streamers;
 using TwitchManager.Services.Abstractions;
 
 namespace TwitchManager.Services.Implementations
 {
-    public class StreamerService(IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IMapper mapper, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : IStreamerService
+    public class StreamerService(IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IMapper mapper, 
+        IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor, IOptionsMonitor<ConfigData> optionsMonitor) : IStreamerService
     {
+
+        public string GetStreamerIdByHost()
+        {
+            var host = httpContextAccessor.HttpContext.Request.Host.Host.ToString();
+            var mappings = optionsMonitor.CurrentValue.HostStreamerMappings;
+            var mapping = mappings.FirstOrDefault(m => m.Host == host);
+
+            return mapping?.StreamerId;
+        }
+
+        public bool IsStreamerSetByHost()
+        {
+            var host = httpContextAccessor.HttpContext.Request.Host.Host.ToString();
+            var mappings = optionsMonitor.CurrentValue.HostStreamerMappings;
+            var mapping = mappings.FirstOrDefault(m => m.Host == host);
+
+            return mapping != null;
+        }
+
+        public async Task<StreamerModel> GetByHostAsync()
+        {
+            var host = httpContextAccessor.HttpContext.Request.Host.Host.ToString();
+
+            var mappings = optionsMonitor.CurrentValue.HostStreamerMappings;
+
+            var mapping = mappings.FirstOrDefault(m => m.Host == host);
+            if (mapping == null)
+            {
+                return null;
+            }
+
+            var context = await dbContextFactory.CreateDbContextAsync();
+
+            var streamer = await context.Streamers
+                .Where(c => c.Id == mapping.StreamerId)
+                .Select(c => mapper.Map<StreamerModel>(c))
+                .FirstOrDefaultAsync();
+
+            return streamer;
+
+        }
+
         public async Task<ICollection<StreamerModel>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);

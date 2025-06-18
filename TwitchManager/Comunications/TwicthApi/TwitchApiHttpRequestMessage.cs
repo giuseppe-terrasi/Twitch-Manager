@@ -5,6 +5,7 @@ namespace TwitchManager.Comunications.TwicthApi
     public abstract class TwitchApiHttpRequestMessage : HttpRequestMessage
     {
         public bool AuthorizationRequired { get; set; } = true;
+        public string BotUserId { get; set; } = "";
     }
 
     public class TwitchApiHttpRequestMessage<T> : TwitchApiHttpRequestMessage

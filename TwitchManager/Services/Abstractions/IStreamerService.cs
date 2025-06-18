@@ -20,5 +20,11 @@ namespace TwitchManager.Services.Abstractions
         Task UpdateAsync(StreamerModel streamer, CancellationToken cancellationToken = default);
 
         Task<bool> UserHasAnyStreamer();
+
+        Task<StreamerModel> GetByHostAsync();
+
+        string GetStreamerIdByHost();
+
+        bool IsStreamerSetByHost();
     }
 }

@@ -2,10 +2,11 @@
 
 using TwitchManager.Helpers;
 using TwitchManager.Models.General;
+using TwitchManager.Services.Abstractions;
 
 namespace TwitchManager.Comunications.TwicthApi
 {
-    public class TwitchApiHttpClientHandler(IWritableOptions<ConfigData> writableOptions) : HttpClientHandler
+    public class TwitchApiHttpClientHandler(ILogger<TwitchApiHttpClientHandler> logger, IWritableOptions<ConfigData> writableOptions, IAppTokenSerivice appTokenSerivice) : HttpClientHandler
     {
         protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -18,7 +19,9 @@ namespace TwitchManager.Comunications.TwicthApi
         {
             if(string.IsNullOrEmpty(writableOptions.Value.Token) || writableOptions.Value.TokenExpiration < DateTime.Now)
             {
-                var tokenRequest = new HttpRequestMessage(HttpMethod.Post, writableOptions.Value.TokenUrl + "/token")
+                var url = writableOptions.Value.TokenUrl + "/token";
+                logger.LogInformation("Requesting new token from {Url}", url);
+                var tokenRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(url, UriKind.Absolute))
                 {
                     Content = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
@@ -53,12 +56,22 @@ namespace TwitchManager.Comunications.TwicthApi
             request.Headers.Add("Authorization", $"Bearer {await GetTokenAsync(cancellationToken)}");
         }
 
+        private async Task AddBotHeadersAsync(TwitchApiHttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            request.Headers.Add("Client-ID", writableOptions.Value.ClientId);
+            request.Headers.Add("Authorization", $"Bearer {await appTokenSerivice.GetAccessTokenAsync(request.BotUserId, cancellationToken)}");
+        }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             if (request is not TwitchApiHttpRequestMessage twitchApiHttpRequestMessage)
                 throw new ArgumentException("Request must be of type TwitchApiHttpRequestMessage", nameof(request));
 
-            if(twitchApiHttpRequestMessage.AuthorizationRequired)
+            if(!string.IsNullOrEmpty(twitchApiHttpRequestMessage.BotUserId))
+            {
+                await AddBotHeadersAsync(twitchApiHttpRequestMessage, cancellationToken);
+            }
+            else if(twitchApiHttpRequestMessage.AuthorizationRequired)
             {
                 await AddHeadersAsync(twitchApiHttpRequestMessage, cancellationToken);
             }

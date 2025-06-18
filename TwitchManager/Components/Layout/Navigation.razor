@@ -2,8 +2,11 @@
 @using TwitchManager.Auth
 @using TwitchManager.Components.Abstractions
 @using TwitchManager.Helpers
+@using TwitchManager.Services.Abstractions
 
 @inherits BaseComponent
+
+@inject IStreamerService StreamerService
 
 @inject TwitchAuthUrlBuilder TwitchAuthUrlBuilder
 
@@ -15,7 +18,11 @@
             </a>
 
         </div>
-        <RadzenSidebarToggle Click="@(() => sidebar1Expanded = !sidebar1Expanded)"/>
+
+        @if (!StreamerService.IsStreamerSetByHost())
+        {
+            <RadzenSidebarToggle Click="@(() => sidebar1Expanded = !sidebar1Expanded)" />
+        }
         <AuthorizeView Context="auth">
             <Authorized>
                 <div class="w-100 d-flex align-items-center justify-content-end py-3 pe-3">

@@ -19,8 +19,25 @@ using TwitchManager.Services.Abstractions;
 namespace TwitchManager.Controllers
 {
     [Route("[controller]")]
-    public class TwitchAuthenticationController(IOptionsMonitor<ConfigData> optionsMonitor, IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IStreamerService streamerService, IAuthenticationService authenticationService) : Controller
+    public class TwitchAuthenticationController(IOptionsMonitor<ConfigData> optionsMonitor, IDbContextFactory<TwitchManagerDbContext> dbContextFactory, 
+        IStreamerService streamerService, IAuthenticationService authenticationService, TwitchAuthUrlBuilder twitchAuthUrlBuilder) : Controller
     {
+        [HttpGet("/login")]
+        public void Login([FromQuery]string returnUrl)
+        {
+            var url = twitchAuthUrlBuilder.BuildAuthUrl();
+
+            Response.Cookies.Append("returnUrl", returnUrl, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/"
+            });
+
+            Response.Redirect(url);
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> Login([FromQuery(Name = "code")] string code, [FromQuery(Name = "error")] string error)
@@ -90,6 +107,14 @@ namespace TwitchManager.Controllers
             await HttpContext.SignInAsync(TwitchManagerAuthenticationOptions.AuthenticationScheme, principal);
 
             var redirectUrl = "";
+
+            if(!string.IsNullOrEmpty(Request.Cookies["returnUrl"]))
+            {
+                redirectUrl = Request.Cookies["returnUrl"];
+                Response.Cookies.Delete("returnUrl");
+
+                return Redirect(redirectUrl);
+            }
 
             if (await streamerService.UserHasAnyStreamer())
             {

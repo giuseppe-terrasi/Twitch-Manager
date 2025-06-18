@@ -40,6 +40,7 @@ namespace TwitchManager.Auth
                 options.Scope.Add("user:read:chat");
                 options.Scope.Add("user:write:chat");
                 options.Scope.Add("user:bot");
+                options.Scope.Add("clips:edit");
                 //options.SaveTokens = true;
                 options.ClientId = configuration["Config:ClientId"];
                 options.ClientSecret = configuration["Config:ClientSecret"];

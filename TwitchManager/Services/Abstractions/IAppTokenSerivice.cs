@@ -2,6 +2,6 @@
 {
     public interface IAppTokenSerivice
     {
-        public Task<string> GetAccessTokenAsync(CancellationToken cancellationToken);
+        public Task<string> GetAccessTokenAsync(string twitchId, CancellationToken cancellationToken);
     }
 }

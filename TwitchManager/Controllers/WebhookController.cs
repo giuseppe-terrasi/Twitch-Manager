@@ -36,9 +36,9 @@ namespace TwitchManager.Controllers
         private async Task<EventSub> GetEventSubAsync(JsonNode notification)
         {
             var twitchId = notification["subscription"]["id"].ToString();
-            var dbContext = await dbContextFactory.CreateDbContextAsync(HttpContext.RequestAborted);
+            var dbContext = await dbContextFactory.CreateDbContextAsync();
 
-            var eventSub = await dbContext.EventSubs.Where(e => e.TwitchEventId == twitchId).FirstOrDefaultAsync(HttpContext.RequestAborted);
+            var eventSub = await dbContext.EventSubs.Where(e => e.TwitchEventId == twitchId).FirstOrDefaultAsync();
 
             return eventSub;
         }

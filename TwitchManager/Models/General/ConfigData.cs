@@ -8,6 +8,13 @@ namespace TwitchManager.Models.General
         Web
     }
 
+    public class HostStreamerMapping
+    {
+        public string Host { get; set; } 
+        
+        public string StreamerId { get; set; }  
+    }
+
     public class ConfigData
     {
         string _dbConnectionString;
@@ -55,6 +62,8 @@ namespace TwitchManager.Models.General
         public string DiscordApiBaseUrl { get; set; }
 
         public string DiscordBotToken { get; set; }
+
+        public List<HostStreamerMapping> HostStreamerMappings { get; set; } = [];
 
         [JsonIgnore]
         public string FilePath { 

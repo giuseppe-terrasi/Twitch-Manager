@@ -31,6 +31,10 @@ namespace TwitchManager.Data.DbContexts
 
         public DbSet<TelegramChat> TelegramChats { get; set; }
 
+        public DbSet<GameQueue> GameQueues { get; set; }
+
+        public DbSet<GameQueueUser> GameQueueUsers { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
