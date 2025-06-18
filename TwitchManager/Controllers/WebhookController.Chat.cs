@@ -232,6 +232,11 @@ namespace TwitchManager.Controllers
             return notification["event"]["broadcaster_user_id"].ToString();
         }
 
+        private static string GetBroadcasterUsername(JsonNode notification)
+        {
+            return notification["event"]["broadcaster_user_name"].ToString();
+        }
+
         private static string GetUserId(JsonNode notification)
         {
             return notification["subscription"]["condition"]["user_id"].ToString();
@@ -626,7 +631,7 @@ namespace TwitchManager.Controllers
                     {
                         var model = await request.GetDataAsync(clipCreationResponse);
 
-                        var url = "https://www.twitch.tv/gausst/clip/" + model.Data.First().Id;
+                        var url = $"https://www.twitch.tv/{GetBroadcasterUsername(notification)}/clip/{model.Data.First().Id}";
 
                         message += $"Clip creata con successo: {url}";
                     }
