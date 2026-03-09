@@ -23,6 +23,8 @@
         public int? VodOffset { get; set; }
         public bool IsFeatured { get; set; }
 
+        public bool IsDownloaded { get; set; }
+
         public virtual Game Game { get; set; }
 
         public virtual Streamer Streamer { get; set; }

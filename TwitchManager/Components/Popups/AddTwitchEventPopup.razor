@@ -1,4 +1,5 @@
 ﻿@using TwitchManager.Components.Abstractions
+@using TwitchManager.Data.Domains
 @using TwitchManager.Helpers
 @using TwitchManager.Models.Api.Events
 @using TwitchManager.Services.Abstractions
@@ -7,12 +8,22 @@
 
 @inject IHttpContextAccessor httpContextAccessor
 
-<div class="row">
+<div class="row mt-3">
     <div class="col-12 text-center">
         <RadzenLabel>
-            Nome utente
+            @Localizer["EventLabel"]
         </RadzenLabel>
         <RadzenDropDown TValue="string" Data="eventTypes" @bind-Value="eventType" class="form-control" />
+    </div>
+    <div class="col-12 text-center mt-3">
+        <RadzenLabel>
+            @Localizer["UserLabel"]
+        </RadzenLabel>
+        <RadzenDropDown TValue="BotUser" Data="BotUsers" @bind-Value="botUser" class="form-control">
+            <Template>
+                @context.TwitchUsername
+            </Template>
+        </RadzenDropDown>
     </div>
 </div>
 
@@ -25,7 +36,7 @@
     </div>
 }
 
-<div class="row mt-3">
+<div class="row mt-5">
     <div class="col-12 grid-2-items">
         <button class="btn btn-secondary" @onclick="() => Close()">
             @Localizer["CancelLabel"]
@@ -44,7 +55,12 @@
     [Parameter]
     public string StreamerId { get; set; }
 
+    [Parameter]
+    public List<BotUser> BotUsers { get; set; }
+
     private string eventType;
+
+    private BotUser botUser;
 
     private IEnumerable<string> eventTypes = [];
 
@@ -54,7 +70,7 @@
 
     private void Close()
     {
-        DialogService.Close(subscribeEventRequest);
+        DialogService.Close((subscribeEventRequest, botUser.TwitchId));
     }
 
     override protected void OnInitialized()
@@ -74,11 +90,11 @@
         {
             case TwitchEvents.ChannelFollow:
                 callback = $"{baseUrl}/webhooks/channel-follow";
-                subscribeEventRequest = new ChannelFollowSubscribeEventRequest(StreamerId, "1290701796", callback);
+                subscribeEventRequest = new ChannelFollowSubscribeEventRequest(StreamerId, botUser.TwitchId, callback);
                 break;
             case TwitchEvents.ChannelChatMessage:
                 callback = $"{baseUrl}/webhooks/chat-message";
-                subscribeEventRequest = new ChannelChatMessageSubscribeEventRequest(StreamerId, "1290701796", callback);
+                subscribeEventRequest = new ChannelChatMessageSubscribeEventRequest(StreamerId, botUser.TwitchId, callback);
                 break;
             case TwitchEvents.StreamOnline:
                 callback = $"{baseUrl}/webhooks/stream-online";

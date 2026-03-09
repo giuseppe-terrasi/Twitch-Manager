@@ -28,6 +28,8 @@
 
         public string VideoUrl { get; set; }
 
+        public bool IsDownloaded { get; set; }
+
         public void Vote()
         {
             IsUserVoted = !IsUserVoted;

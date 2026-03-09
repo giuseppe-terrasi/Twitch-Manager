@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
+using MySqlConnector;
+
 using System.Reflection;
 using TwitchManager.Data.Domains;
 
@@ -35,10 +37,22 @@ namespace TwitchManager.Data.DbContexts
 
         public DbSet<GameQueueUser> GameQueueUsers { get; set; }
 
+        public DbSet<LiveDataOption> LiveDataOptions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
             base.OnModelCreating(modelBuilder);
+        }
+
+        public IQueryable<RandomClip> GetRandomClips(string broadcasterId, bool? downloaded, int limit)
+        {
+            return RandomClips.FromSqlRaw("CALL twitchmanager.GetRandomClips(@BroadcasterId, @Downloaded, @Limit)", 
+                new MySqlParameter("@BroadcasterId", broadcasterId),
+                new MySqlParameter("@Downloaded", downloaded.HasValue ? downloaded.Value ? 1 : 0 : -1),
+                new MySqlParameter("@Limit", limit))
+                .AsNoTracking()
+                .AsQueryable();
         }
     }
 }

@@ -20,6 +20,8 @@ namespace TwitchManager.Services.Abstractions
 
         Task<string> GetDownloadLinkAsync(string clipUrl, CancellationToken cancellationToken);
 
+        Task<string> GetDownloadLinkAsync(ClipModel clip, CancellationToken cancellationToken);
+
         Task<ClipModel> GetByIdAsync(string id);
 
         Task GetFromApiAsync(string streamerId, CancellationToken cancellationToken = default);

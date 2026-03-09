@@ -15,5 +15,7 @@ namespace TwitchManager.Models.Clips
         public string OrderBy { get; set; }
 
         public bool IsRandom { get; set; }
+
+        public bool? IsDownloaded { get; set; }
     }
 }

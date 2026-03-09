@@ -417,3 +417,11 @@ table td {
 .white {
     color: #FFFFFF !important;
 }
+
+.download-warning {
+    z-index: 999999;
+    color: #ffca001f;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+}

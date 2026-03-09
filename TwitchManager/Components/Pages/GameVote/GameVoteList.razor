@@ -1,0 +1,114 @@
+﻿@page "/gamevotes"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using TwitchManager.Components.Abstractions
+@using TwitchManager.Helpers
+@using TwitchManager.Models
+@using TwitchManager.Services.Abstractions
+
+@rendermode InteractiveServerNotPrerendered
+
+@inherits BaseComponent
+
+@inject IGameVoteService GameVoteService
+@inject DialogService DialogService
+
+@attribute [Authorize]
+@* 
+<RadzenDataGrid Data="@gameVotes" TItem="GameVoteModel" PagerPosition="PagerPosition.Bottom" AllowPaging="false" AllowSorting="false" AllowFiltering=false @ref=grid
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" SelectionMode="DataGridSelectionMode.Multiple" FilterMode="FilterMode.Simple" 
+                LogicalFilterOperator="LogicalFilterOperator.And">
+    <Columns>
+        <RadzenDataGridColumn TItem="GameVoteModel" Property="@nameof(GameVoteModel.Id)" Title="Id" Filterable=false Reorderable=false Sortable=false />
+        <RadzenDataGridColumn TItem="GameVoteModel" Property="@nameof(GameVoteModel.GameName)" Title="Game Name" />
+        <RadzenDataGridColumn TItem="GameVoteModel" Property="@nameof(GameVoteModel.ChatterUsername)" Title="Votato da" Filterable=false Reorderable=false Sortable=false />
+        <RadzenDataGridColumn TItem="GameVoteModel" Filterable=false Reorderable=false Sortable=false>
+            <Template Context="vote">
+                @vote.VotedOn.ToString("dd/MM/yyyy HH:mm:ss")
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid> *@
+
+<div class="row page-title">
+    <div class="col-12 col-md-8">
+        <h1>
+            Elenco giochi votati
+        </h1>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <Virtualize TItem="GameVoteModel" Items="gameVotes" Context="game" OverscanCount="5">
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3 mt-3 position-relative">
+            <div class="card d-flex justify-content-between h-100 clip-card">
+                <div class="row mt-1">
+                    <div class="col-12 px-4 d-flex justify-content-between">
+                        <h1>@game.GameName</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 px-4 d-flex justify-content-start">
+                        <small class="user-badge-id"> votato da @game.ChatterUsername il @(game.VotedOn.ToString("dd/MM/yyyy HH:mm:ss"))</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Virtualize>
+</div>
+
+
+<div class="row mt-3">
+    <div class="col-12 col-lg-6 offset-lg-6 grid-2-items">
+        <button class="btn btn-secondary" @onclick="async () => await ClearAsync()">
+            Svuota
+        </button>
+        <button class="btn btn-primary" @onclick="async () => await GetRandomAsync()">
+            Seleziona un gioco casuale
+        </button>
+    </div>
+</div>
+
+
+@code {
+
+    private List<GameVoteModel> gameVotes = new();
+    private RadzenDataGrid<GameVoteModel> grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        gameVotes = await GameVoteService.GetVotesAsync();
+    }
+
+    private async Task GetRandomAsync()
+    {
+        var randomVote = await GameVoteService.GetRandomAsync();
+
+        await DialogService.OpenAsync<SelectedPopup>("Il gioco scelto è", new Dictionary<string, object>()
+        {
+            { "Selected", randomVote }, { "DialogService", DialogService }
+        }, new DialogOptions()
+        {
+            CloseDialogOnEsc = false,
+            CloseDialogOnOverlayClick = false,
+            ShowClose = false
+        });
+    }
+
+    private async Task ClearAsync()
+    {
+        var result = await DialogService.Confirm("Sei sicuro di voler svuotare l'elenco dei giochi votati?", "Conferma", new ConfirmOptions()
+        {
+            OkButtonText = "Sì",
+            CancelButtonText = "No"
+        });
+
+        if (result ?? false)
+        {
+            await GameVoteService.ClearVotesAsync();
+            gameVotes.Clear();
+            await grid.Reload();
+        }
+    }
+
+}

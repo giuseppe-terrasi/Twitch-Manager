@@ -4,6 +4,7 @@ using TwitchManager.Services.Abstractions;
 
 namespace TwitchManager.Jobs
 {
+    [DisallowConcurrentExecution]
     public class ClipSyncronizerJob(ILogger<ClipSyncronizerJob> logger, IStreamerService streamerService, IClipService clipService) : IJob
     {
         public async Task Execute(IJobExecutionContext context)

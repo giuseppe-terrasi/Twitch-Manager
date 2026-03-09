@@ -1,8 +1,10 @@
 ﻿@page "/event-subscriptions"
 @using TwitchManager.Components.Abstractions
 @using TwitchManager.Components.Popups
+@using TwitchManager.Data.Domains
 @using TwitchManager.Helpers
 @using TwitchManager.Models.Api.Events
+@using TwitchManager.Models.Streamers
 @using TwitchManager.Services.Abstractions
 
 @rendermode InteractiveServerNotPrerendered
@@ -10,23 +12,37 @@
 @inject ITwichEventService TwitchEventService
 @inject DialogService DialogService
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IStreamerService StreamerService
 
 @inherits BaseComponent
 
 @attribute [Authorize(Roles = "Admin")]
 
 <PageTitle>
-    @Localizer["EventSubdPageTitle"]
+    @Localizer["EventSubPageTitle"]
 </PageTitle>
 
 <div class="row page-title">
-    <div class="col-8">
+    <div class="col-6">
         <h1>
-            @Localizer["EventSubdPageTitle"]
+            @Localizer["EventSubPageTitle"]
         </h1>
     </div>
-    <div class="col-4 d-flex justify-content-end">
-        <button class="btn btn-primary d-flex justify-content-center align-items-center" @onclick="async () => await AddNewAsync()">
+    <div class="col-6 d-flex justify-content-end">
+        <RadzenLabel class="me-3 mb-0">@Localizer["StreamerLabel"]:</RadzenLabel>
+        <RadzenDropDown Data="streamers.AsQueryable()" TValue="StreamerModel" @bind-Value=currentStreamer Context="streamer" Change="async () => await LoadEventsAsync()" AllowFiltering=true AllowVirtualization=true
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" TextProperty="DisplayName">
+            <Template>
+                <div class="d-flex align-items-center justify-content-start">
+                    <img src="@(((StreamerModel)streamer).ProfileImageUrl)" class="img-fluid me-2" style="height: 25px" />
+                    <span>@(((StreamerModel)streamer).DisplayName)</span>
+                </div>
+            </Template>
+            <EmptyTemplate>
+                @Localizer["NoStreamerImportedLabel"]
+            </EmptyTemplate>
+        </RadzenDropDown>
+        <button class="btn btn-primary d-flex justify-content-center align-items-center ms-3" @onclick="async () => await AddNewAsync()" disabled="@(currentStreamer == null)">
             @Localizer["AddEventSubLabel"] <i class="ph ph-twitch-logo ms-3"></i>
         </button>
     </div>
@@ -53,6 +69,8 @@
             </HeaderTemplate>
             <Columns>
                 <RadzenDataGridColumn TItem="EventSubModel" Property="@nameof(EventSubModel.Id)" Title="Id" Filterable=false Reorderable=false Sortable=false />
+                <RadzenDataGridColumn TItem="EventSubModel" Property="@nameof(EventSubModel.StreamerName)" Title="Streamer" Filterable=false Reorderable=false Sortable=false />
+                <RadzenDataGridColumn TItem="EventSubModel" Property="@nameof(EventSubModel.BotUsername)" Title="Bot Username" Filterable=false Reorderable=false Sortable=false />
                 <RadzenDataGridColumn TItem="EventSubModel" Property="@nameof(EventSubModel.TwitchEventId)" Title="Twitch Event Id" Filterable=false Reorderable=false Sortable=false />
                 <RadzenDataGridColumn TItem="EventSubModel" Property="@nameof(EventSubModel.Type)" Title="Event Name" />
                 <RadzenDataGridColumn TItem="EventSubModel" Title="Status">
@@ -74,17 +92,23 @@
     private ICollection<EventSubModel> eventSubs = new List<EventSubModel>();
 
     private bool _loaded = false;
-    private string _streamerId;
+//    private string _streamerId;
 
     RadzenDataGrid<EventSubModel> grid;
+
+    private List<BotUser> _botUsers = [];
+    private IEnumerable<StreamerModel> streamers = new List<StreamerModel>();
+    private StreamerModel currentStreamer = null;
 
     protected override async Task OnInitializedAsync()
     {
         await ExecuteAsync(async () =>
         {
-            _streamerId = "136110155";//HttpContextAccessor.HttpContext.User.GetUserTwitchId();
+            //_streamerId = "136110155";//HttpContextAccessor.HttpContext.User.GetUserTwitchId();
 
-            await LoadEventsAsync();
+            streamers = await StreamerService.GetAllByUserAsync();
+
+            //await LoadEventsAsync();
 
             _loaded = true;
         });
@@ -92,27 +116,30 @@
 
 
     private async Task AddNewAsync() {
-        var toAdd = await DialogService.OpenAsync<AddTwitchEventPopup>("Aggiungi evento Twitch", new Dictionary<string, object>()
+        var toAdd = await DialogService.OpenAsync<AddTwitchEventPopup>(Localizer["AddEventTitle"], new Dictionary<string, object>()
         {
             { "DialogService", DialogService },
-            { "StreamerId", _streamerId }
+            { "StreamerId", currentStreamer.Id },
+            { "BotUsers", _botUsers }
         });
 
-        if (toAdd != null)
+        var subscribeEventRequest = toAdd.Item1;
+        var botUserId = toAdd.Item2;
+
+        await ExecuteAsync(async () =>
         {
-            await ExecuteAsync(async () =>
-            {
-                await TwitchEventService.SubscribeAsync(toAdd, _streamerId, CancellationToken.None);
+            await TwitchEventService.SubscribeAsync(subscribeEventRequest, currentStreamer.Id, botUserId, CancellationToken.None);
 
-                await LoadEventsAsync();
+            await LoadEventsAsync();
 
-            });
-        }
+        });
     }
 
     private async Task LoadEventsAsync()
     {
-        eventSubs = await TwitchEventService.GetSubscriptionsAsync(_streamerId, CancellationToken.None);
+        eventSubs = await TwitchEventService.GetSubscriptionsAsync(currentStreamer.Id, CancellationToken.None);
+        _botUsers = await TwitchEventService.GetBotUserIdsAsnc(CancellationToken.None);
         _loaded = true;
+        await InvokeAsync(StateHasChanged);
     }
 }

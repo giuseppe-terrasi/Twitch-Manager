@@ -35,6 +35,10 @@
 
         public string Action { get; set; }
 
+        public string BotUserId{ get; set; }
+
         public virtual Streamer Streamer { get; set; }
+
+        public virtual BotUser BotUser { get; set; }
     }
 }

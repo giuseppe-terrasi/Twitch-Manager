@@ -6,7 +6,11 @@
 
         public string TwitchId { get; set; }
 
+        public string TwitchUsername { get; set; }
+
         public DateTime CreatedOn { get; set; }
+
+        public DateTime UpdatedOn { get; set; }
 
         public string AccessToken { get; set; }
 
@@ -15,5 +19,7 @@
         public string IdToken { get; set; }
 
         public DateTime ExpirationDate { get; set; }
+        
+        public virtual ICollection<EventSub> EventSubs { get; set; }
     }
 }

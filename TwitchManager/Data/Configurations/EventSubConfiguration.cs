@@ -20,6 +20,12 @@ namespace TwitchManager.Data.Configurations
             builder.HasOne(e => e.Streamer).WithMany(s => s.EventSubs)
                 .HasForeignKey(e => e.StreamerId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(e => e.BotUser).WithMany(b => b.EventSubs)
+                .HasForeignKey(e => e.BotUserId)
+                .HasPrincipalKey(b => b.TwitchId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             builder.Property(e => e.StreamerId).IsRequired();
             builder.Property(e => e.Status).HasConversion<string>().IsRequired();
             builder.Property(e => e.Action)

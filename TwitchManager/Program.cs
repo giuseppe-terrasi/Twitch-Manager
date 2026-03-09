@@ -58,6 +58,7 @@ builder.Services.AddScoped<IStreamerService, StreamerService>();
 builder.Services.AddScoped<IClipService, ClipService>();
 builder.Services.AddScoped<ITwichEventService, TwichEventService>();
 builder.Services.AddScoped<IAppTokenSerivice, AppTokenService>();
+builder.Services.AddScoped<IGameVoteService, GameVoteService>();
 builder.Services.AddHttpClient("TwitchApi")
     .ConfigureHttpClient((s, c) => c.BaseAddress = new Uri(s.GetRequiredService<IOptionsMonitor<ConfigData>>().CurrentValue.BaseUrl))
     .ConfigurePrimaryHttpMessageHandler((s) => new TwitchApiHttpClientHandler(s.GetRequiredService<ILogger<TwitchApiHttpClientHandler>>(),

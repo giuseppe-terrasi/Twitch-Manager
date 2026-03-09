@@ -1,4 +1,5 @@
-﻿using TwitchManager.Models.Api.Events;
+﻿using TwitchManager.Data.Domains;
+using TwitchManager.Models.Api.Events;
 
 namespace TwitchManager.Services.Abstractions
 {
@@ -7,8 +8,10 @@ namespace TwitchManager.Services.Abstractions
     {
         Task<ICollection<EventSubModel>> GetSubscriptionsAsync(string streamerId, CancellationToken cancellationToken);
 
-        Task<bool> SubscribeAsync<T>(T eventModel, string streamerId, CancellationToken cancellationToken) where T : SubscribeEventRequest;
+        Task<bool> SubscribeAsync<T>(T eventModel, string streamerId, string botUserId, CancellationToken cancellationToken) where T : SubscribeEventRequest;
 
         Task<bool> DeleteSubscriptionAsync(string id, CancellationToken cancellationToken);
+
+        Task<List<BotUser>> GetBotUserIdsAsnc(CancellationToken cancellationToken);
     }
 }

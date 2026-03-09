@@ -2,7 +2,10 @@
 using AutoMapper.Extensions.ExpressionMapping;
 using AutoMapper.Extensions.ExpressionMapping.Impl;
 
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 using System.Linq.Dynamic.Core;
 
@@ -13,14 +16,17 @@ using TwitchManager.Data.DbContexts;
 using TwitchManager.Data.Domains;
 using TwitchManager.Helpers;
 using TwitchManager.Models.Clips;
+using TwitchManager.Models.General;
 using TwitchManager.Models.Streamers;
 using TwitchManager.Services.Abstractions;
 
 namespace TwitchManager.Services.Implementations
 {
-    public partial class ClipService(ILogger<ClipService> logger, IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IMapper mapper,
-        IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : IClipService
+    public partial class ClipService(ILogger<ClipService> logger,IOptionsMonitor<ConfigData> configMonitor, IDbContextFactory<TwitchManagerDbContext> dbContextFactory, IMapper mapper,
+        IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor, IDataProtectionProvider provider) : IClipService
     {
+        private readonly IDataProtector _protector = provider.CreateProtector("DownloadController");
+
         public async Task<ICollection<ClipModel>> GetAllAsync()
         {
             var context = await dbContextFactory.CreateDbContextAsync();
@@ -47,13 +53,33 @@ namespace TwitchManager.Services.Implementations
 
         public async Task<string> GetDownloadLinkAsync(string cliId, CancellationToken cancellationToken)
         {
-            var client = httpClientFactory.CreateClient("TwitchGQL");
-            var request = new ClipTokenTwitchGQLRequest(cliId);
+            try
+            {
+                var client = httpClientFactory.CreateClient("TwitchGQL");
+                var request = new ClipTokenTwitchGQLRequest(cliId);
 
-            var httpResponse = await client.SendAsync(request, cancellationToken);  
-            var clipToken = (await request.GetDataAsync(httpResponse, cancellationToken)).FirstOrDefault() ?? throw new Exception("No video found in the clip");
+                var httpResponse = await client.SendAsync(request, cancellationToken);
+                var clipToken = (await request.GetDataAsync(httpResponse, cancellationToken)).FirstOrDefault() ?? throw new Exception("No video found in the clip");
 
-            return clipToken.GetUrl();
+                return clipToken.GetUrl();
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Error while getting download link for clip {ClipId}", cliId);
+
+                throw new BadHttpRequestException("Error while getting download link for clip");
+            }
+        }
+
+        public Task<string> GetDownloadLinkAsync(ClipModel clip, CancellationToken cancellationToken)
+        {
+            if(!clip.IsDownloaded)
+                return GetDownloadLinkAsync(clip.Id, cancellationToken);
+
+            var path = $"{configMonitor.CurrentValue.ClipDownloadPath}/{clip.BroadcasterId}/{clip.Id}.mp4";
+            var protectedPath = _protector.Protect($"{DateTime.UtcNow.AddMinutes(5)}|{path}");
+
+            return Task.FromResult($"/download/{protectedPath}");
         }
 
         public async Task<ClipModel> GetByIdAsync(string id)
@@ -80,12 +106,18 @@ namespace TwitchManager.Services.Implementations
                 .Where(c => c.BroadcasterId == streamerId)  
                 .MaxAsync(c => (DateTime?)c.CreatedAt, cancellationToken);
 
-            var from = maxDate == null ? "" : maxDate.Value.Date.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            //var from = maxDate == null ? "" : maxDate.Value.Date.ToString("yyyy-MM-ddTHH:mm:ssZ");
 
             var cursor = "";
 
+            var today = DateTime.UtcNow.Date;
+            var currentDate = maxDate != null ? maxDate.Value.Date : today;
+
+            var isPremium = await context.Streamers.Where(s => s.Id == streamerId).Select(s => s.IsPremium).FirstOrDefaultAsync(cancellationToken);
+
             do
             {
+                var from = currentDate.ToString("yyyy-MM-ddTHH:mm:ssZ");
                 var request = new GetClipsHttpRequestMessage(broadcasterId: streamerId, startedAt: from, after: cursor);
 
                 var response = await client.SendAsync(request, cancellationToken);
@@ -142,10 +174,67 @@ namespace TwitchManager.Services.Implementations
                     }
                 }
 
+                currentDate = currentDate.AddDays(1);
+
                 cursor = clipResponse.Pagination.Cursor;
             }
-            while (!string.IsNullOrEmpty(cursor));
-            
+            while (!string.IsNullOrEmpty(cursor) || currentDate != today);
+
+            if (!isPremium)
+            {
+                logger.LogInformation("Streamer {StreamerId} is not premium, skipping clip download", streamerId);
+                return;
+            }
+
+            var totalDownloaded = await context.Clips.Where(c => c.BroadcasterId == streamerId && c.IsDownloaded).CountAsync(cancellationToken);
+
+            var maxDownloads = configMonitor.CurrentValue.MaxDownloadClips;
+
+            if(totalDownloaded >= maxDownloads)
+            {
+                logger.LogInformation("Streamer {StreamerId} has already {TotalDownloaded}/{MaxDownloads} downloaded clips, skipping download", streamerId, totalDownloaded, maxDownloads);
+                return;
+            }
+
+            var downloadDirectory = $"{configMonitor.CurrentValue.ClipDownloadPath}/{streamerId}";
+
+            if (!Directory.Exists(downloadDirectory))
+            {
+                Directory.CreateDirectory(downloadDirectory);
+            }
+
+            var clipsToDownload = await context.RandomClips
+                .AsNoTracking()
+                .Where(c => c.BroadcasterId == streamerId && !c.IsDownloaded)
+                .OrderByDescending(c => c.CreatedAt)
+                .Take(maxDownloads - totalDownloaded)
+                .ToListAsync(cancellationToken);
+
+            foreach (var clip in clipsToDownload)
+            {
+                try
+                {
+                    var downloadLink = await GetDownloadLinkAsync(clip.Id, cancellationToken);
+
+                    var httpClient = new HttpClient();
+
+                    using (var fileStream = File.OpenWrite($"{downloadDirectory}/{clip.Id}.mp4"))
+                    {
+                        var stream = await httpClient.GetStreamAsync(downloadLink, cancellationToken);
+
+                        await stream.CopyToAsync(fileStream, cancellationToken);
+                    }
+
+                    await context.Clips
+                        .Where(c => c.Id == clip.Id)
+                        .ExecuteUpdateAsync(c => c.SetProperty(p => p.IsDownloaded, true), cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error while downloading clip {ClipId}", clip.Id);
+                }
+            }
+
         }
 
         public async Task<ClipFilterResultModel> GetByStreamerAsync(ClipFilterModel filterModel, CancellationToken cancellationToken = default)
@@ -164,8 +253,8 @@ namespace TwitchManager.Services.Implementations
                     if(filterModel.IsRandom)
                     {
                         query = context.RandomClips
-                        .Include(c => c.Game)   
                         .Where(c => c.BroadcasterId == filterModel.StreamerId)
+                        .Include(c => c.Game)   
                         .UseAsDataSource(mapper).For<ClipModel>();
                     }
                     else
@@ -188,6 +277,11 @@ namespace TwitchManager.Services.Implementations
                         {
                             query = query.Where(filter);
                         }
+                    }
+
+                    if(filterModel.IsDownloaded.HasValue)
+                    {
+                        query = query.Where(c => c.IsDownloaded == filterModel.IsDownloaded.Value);
                     }
 
                     var total = query.Count(); 

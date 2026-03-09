@@ -120,6 +120,12 @@
   <data name="ActionsLabel" xml:space="preserve">
     <value>Actions</value>
   </data>
+  <data name="AddEventSubLabel" xml:space="preserve">
+    <value>Add new</value>
+  </data>
+  <data name="AddEventTitle" xml:space="preserve">
+    <value>Add new Twitch event</value>
+  </data>
   <data name="AddFromTwitchLabel" xml:space="preserve">
     <value>Add from Twitch</value>
   </data>
@@ -194,6 +200,12 @@
   </data>
   <data name="ErrorsLabel" xml:space="preserve">
     <value>Errors</value>
+  </data>
+  <data name="EventLabel" xml:space="preserve">
+    <value>Event</value>
+  </data>
+  <data name="EventSubPageTitle" xml:space="preserve">
+    <value>Twitch event subscriptions</value>
   </data>
   <data name="FilteredLabel" xml:space="preserve">
     <value>Filtered</value>
@@ -273,6 +285,9 @@
   <data name="StreamersPageTitle" xml:space="preserve">
     <value>Streamers</value>
   </data>
+  <data name="SubscibeLabel" xml:space="preserve">
+    <value>Subscribe</value>
+  </data>
   <data name="SyncLabel" xml:space="preserve">
     <value>Syncronize</value>
   </data>
@@ -288,6 +303,9 @@
   <data name="TotalsLabel" xml:space="preserve">
     <value>Totals</value>
   </data>
+  <data name="UserLabel" xml:space="preserve">
+    <value>Bot user</value>
+  </data>
   <data name="UserNotFoundMessage" xml:space="preserve">
     <value>User not found</value>
   </data>
@@ -299,5 +317,8 @@
   </data>
   <data name="VotesDescLabel" xml:space="preserve">
     <value>Likes decreasing</value>
+  </data>
+  <data name="RandomClipsDownloadedWarning" xml:space="preserve">
+    <value>Backup clips playing</value>
   </data>
 </root>

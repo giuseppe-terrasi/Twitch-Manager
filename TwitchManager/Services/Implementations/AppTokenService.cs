@@ -38,6 +38,8 @@ namespace TwitchManager.Services.Implementations
                     {
                         Id = Guid.NewGuid().ToString(),
                         TwitchId = twitchId,
+                        CreatedOn = DateTime.UtcNow,
+                        UpdatedOn = DateTime.UtcNow,
                     };
 
                     dbContext.BotUsers.Add(appToken);
@@ -102,6 +104,7 @@ namespace TwitchManager.Services.Implementations
                 botUser.AccessToken = token["access_token"].ToString();
                 botUser.ExpirationDate = DateTime.UtcNow.AddSeconds((int)token["expires_in"]);
                 botUser.RefreshToken = token["refresh_token"].ToString();
+                botUser.UpdatedOn = DateTime.UtcNow;
             }
             else
             {

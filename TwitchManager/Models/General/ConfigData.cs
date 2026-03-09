@@ -63,6 +63,8 @@ namespace TwitchManager.Models.General
 
         public string DiscordBotToken { get; set; }
 
+        public int MaxDownloadClips { get; set; }
+
         public List<HostStreamerMapping> HostStreamerMappings { get; set; } = [];
 
         [JsonIgnore]

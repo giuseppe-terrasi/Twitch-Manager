@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using System.Net.WebSockets;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -11,6 +13,8 @@ using TwitchManager.Comunications.TwicthApi.Api.Messages;
 using TwitchManager.Comunications.TwicthApi.Api.Streamers;
 using TwitchManager.Data.DbContexts;
 using TwitchManager.Data.Domains;
+
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace TwitchManager.Controllers
 {
@@ -67,80 +71,196 @@ namespace TwitchManager.Controllers
 
                 var message = notification["event"]["message"]["text"].ToString();  
 
-                var regex = CommandRegex();
+                var userId = GetUserId(notification);
 
-                var match = regex.Match(message);
+                switch(userId)
+                {
+                    case "1290701796": // Skypinobot
+                        await HandleSkypinobotAsync(notification, message, twitchManagerDbContext);
+                        break;
 
-                if (match.Success) {
-                    var command = match.Groups[1].Value.Replace("!", "");
-                    var option = match.Groups[2].Value;
-
-                    switch(command)
-                    {
-                        case "entra":
-                            await HandleAddOnQueueAsync(notification, twitchManagerDbContext);
-                            break;
-                        case "esci":
-                            await HandleRemoveFromQueueAsync(notification, twitchManagerDbContext);
-                            break;
-                        case "lista":
-                            await HandleListQueueAsync(notification, twitchManagerDbContext);
-                            break;
-                        case "prossimi":
-                            await HandleNextFromQueueAsync(notification, twitchManagerDbContext);
-                            break;
-                        case "svuota":
-                            await HandleClearQueueAsync(notification, twitchManagerDbContext);
-                            break;
-                        case "apri":
-                            await HandleOpenQueueAsync(notification, twitchManagerDbContext);
-                            break;
-                        case "chiudi":
-                            await HandleCloseQueueAsync(notification, twitchManagerDbContext);
-                            break;
-                        case "aiuto":
-                            await HandleHelpQueueAsync(notification, twitchManagerDbContext);
-                            break;
-                        case "vota":
-                            if (string.IsNullOrEmpty(option))
-                            {
-                                await SendMessageInChatAsync(GetBroadcasterId(notification), GetUserId(notification), "Devi specificare un gioco da votare. Esempio: !vota NomeGioco");
-                                return;
-                            }
-                            await HandleVoteAsync(notification, option, twitchManagerDbContext);
-                            break;
-                        case "skyClip":
-                            await HandleCreateClipAsync(notification);
-                            break;
-                        default:
-                            logger.LogWarning("Unknown command received: {command}", command);
-                            break;
-                    }
+                    case "1003402715": // Ele
+                        await HandleEleAsync(notification, message, twitchManagerDbContext);
+                        break;
                 }
 
-                //var streamerId = notification["event"]["broadcaster_user_id"].ToString();
-
-                //var existingStreamer = await twitchManagerDbContext.Streamers.FindAsync(streamerId);
-
-                //if (existingStreamer == null)
-                //{
-                //    return NoContent();
-                //}
-
-                //var chatMessage = new Chat
-                //{
-                //    Id = Guid.NewGuid(),
-                //    StreamerId = streamerId,
-                //    RawData = notification.ToString()
-                //};
-
-                //await twitchManagerDbContext.Chats.AddAsync(chatMessage);
-
-                //await twitchManagerDbContext.SaveChangesAsync();
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to handle chat-message webhook notification");
+            }
+        }
+        private async Task HandleEleAsync(JsonNode notification, string message, TwitchManagerDbContext twitchManagerDbContext)
+        {
+            if (message.StartsWith("ele", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var broadcasterId = GetBroadcasterId(notification);
+                var chatterUsername = GetChatterUsername(notification);
+
+                if (chatterUsername == "ele_fan_tino")
+                    return;
+
+                var eleEnabled = await twitchManagerDbContext.LiveDataOptions
+                    .Where(e => e.StreamerId == broadcasterId && e.Key == "IsEleEnabled")
+                    .FirstOrDefaultAsync();
+
+                if (eleEnabled == null || eleEnabled.Value != "true")
+                {
+                    await SendMessageInChatAsync(broadcasterId, GetUserId(notification), "Ele non è attiva al momento.");
+                    return;
+                }
+                
+                logger.LogInformation("Handling Ele notification with message");
+
+                var httpClient = new HttpClient();
+                var request = new HttpRequestMessage(HttpMethod.Post, "http://cheshire-cat-core/auth/token");
+                var json = new JsonObject
+                {
+                    ["username"] = "admin",
+                    ["password"] = "X6apPZ2ja8uUdciO",
+                };
+                var content = new StringContent(json.ToJsonString(), Encoding.UTF8, "application/json");
+                request.Content = content;
+                var tokenResponseMessage = await httpClient.SendAsync(request);
+
+                if (!tokenResponseMessage.IsSuccessStatusCode)
+                {
+                    logger.LogError("Failed to get token from cheshire-cat-core, status code: {statusCode}", tokenResponseMessage.StatusCode);
+                    return;
+                }
+
+                var tokenResponse = await tokenResponseMessage.Content.ReadAsStringAsync();
+
+                var tokenJson = JsonNode.Parse(tokenResponse);
+
+                var token = tokenJson?["access_token"]?.ToString();
+
+                var client = new ClientWebSocket();
+                await client.ConnectAsync(new Uri($"ws://cheshire-cat-core/ws?token={token}"), CancellationToken.None);
+
+                json = new JsonObject
+                {
+                    ["text"] = message,
+                };
+
+                await client.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(json.ToJsonString())), WebSocketMessageType.Text, true, CancellationToken.None);
+
+                var buffer = new ArraySegment<byte>(new byte[1024]);
+
+                var responseMessage = string.Empty;
+                var currentJson = string.Empty;
+
+                while (client.State == WebSocketState.Open)
+                {
+                    var result = await client.ReceiveAsync(buffer, CancellationToken.None);
+
+                    var resultString = Encoding.UTF8.GetString(buffer.Array, 0, result.Count);
+
+                    try
+                    {
+                        currentJson += resultString;
+
+                        var jsonNode = JsonNode.Parse(currentJson);
+
+                        if (jsonNode?["type"]?.ToString() == "chat_token")
+                        {
+                            responseMessage += jsonNode?["content"]?.ToString();
+                        }
+
+                        currentJson = string.Empty;
+                    }
+                    catch
+                    {
+                        await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Invalid JSON", CancellationToken.None);
+                        break;
+                    }
+                }
+
+                await SendMessageInChatAsync(GetBroadcasterId(notification), GetUserId(notification), responseMessage);
+
+                logger.LogInformation("Ele notification handled successfully");
+            }
+            else
+            {
+                var regex = CommandRegex();
+
+                var match = regex.Match(message);
+
+                if (match.Success)
+                {
+                    var command = match.Groups[1].Value.Replace("!", "");
+                    var option = match.Groups[2].Value;
+
+                    switch (command)
+                    {
+                        case "attivaEle":
+                            await HandleEnableEleAsync(notification, twitchManagerDbContext);
+                            break;
+
+                        case "disattivaEle":
+                            await HandleDisableEleAsync(notification, twitchManagerDbContext);
+                            break;
+                    }
+                }
+            }
+        }
+
+        private async Task HandleSkypinobotAsync(JsonNode notification, string message, TwitchManagerDbContext twitchManagerDbContext)
+        {
+            var regex = CommandRegex();
+
+            var match = regex.Match(message);
+
+            if (match.Success)
+            {
+                var command = match.Groups[1].Value.Replace("!", "");
+                var option = match.Groups[2].Value;
+
+                switch (command)
+                {
+                    case "entra":
+                        await HandleAddOnQueueAsync(notification, twitchManagerDbContext);
+                        break;
+                    case "esci":
+                        await HandleRemoveFromQueueAsync(notification, twitchManagerDbContext);
+                        break;
+                    case "lista":
+                        await HandleListQueueAsync(notification, twitchManagerDbContext);
+                        break;
+                    case "prossimi":
+                        await HandleNextFromQueueAsync(notification, twitchManagerDbContext);
+                        break;
+                    case "svuota":
+                        await HandleClearQueueAsync(notification, twitchManagerDbContext);
+                        break;
+                    case "apri":
+                        await HandleOpenQueueAsync(notification, twitchManagerDbContext);
+                        break;
+                    case "chiudi":
+                        await HandleCloseQueueAsync(notification, twitchManagerDbContext);
+                        break;
+                    case "aiuto":
+                        await HandleHelpQueueAsync(notification, twitchManagerDbContext);
+                        break;
+                    case "vota":
+                    case "voto":
+                        if (string.IsNullOrEmpty(option))
+                        {
+                            await SendMessageInChatAsync(GetBroadcasterId(notification), GetUserId(notification), "Devi specificare un gioco da votare. Esempio: !vota NomeGioco oppure !voto NomeGioco");
+                            return;
+                        }
+                        await HandleVoteAsync(notification, option, twitchManagerDbContext);
+                        break;
+                    case "skyClip":
+                    case "SkyClip":
+                    case "skyclip":
+                    case "clip":
+                        await HandleCreateClipAsync(notification);
+                        break;
+                    default:
+                        logger.LogWarning("Unknown command received: {command}", command);
+                        break;
+                }
             }
         }
 
@@ -254,7 +374,90 @@ namespace TwitchManager.Controllers
 
         private static bool IsBroadcaster(JsonNode notification)
         {
-            return GetBroadcasterId(notification) == GetUserId(notification);
+            return GetBroadcasterUsername(notification) == GetChatterUsername(notification);
+        }
+
+        private async Task HandleEnableEleAsync(JsonNode notification, TwitchManagerDbContext twitchManagerDbContext)
+        {
+            var isBroadcaster = IsBroadcaster(notification);
+            var isModerator = IsModerator(notification);
+            var broadcasterId = GetBroadcasterId(notification);
+            var userId = GetUserId(notification);
+            var chatterUsername = GetChatterUsername(notification);
+
+            if (!isBroadcaster && !isModerator)
+            {
+                await SendMessageInChatAsync(broadcasterId, userId, $"@{chatterUsername} ti piacerebbe! Kappa");
+                return;
+            }
+
+            var eleEnabled = await twitchManagerDbContext.LiveDataOptions
+                .Where(e => e.StreamerId == broadcasterId && e.Key == "IsEleEnabled")
+                .FirstOrDefaultAsync();
+
+            if (eleEnabled == null)
+            {
+                eleEnabled = new LiveDataOption
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    StreamerId = broadcasterId,
+                    CreatedOn = DateTime.UtcNow,
+                    UpdatedOn = DateTime.UtcNow,
+                    Key = "IsEleEnabled",
+                    Value = "true"
+                };
+                twitchManagerDbContext.LiveDataOptions.Add(eleEnabled);
+            }
+            else
+            {
+                eleEnabled.Value = "true";
+                eleEnabled.UpdatedOn = DateTime.UtcNow;
+            }
+
+            await twitchManagerDbContext.SaveChangesAsync();
+
+            await SendMessageInChatAsync(broadcasterId, userId, $"@{chatterUsername} Ele è stata attivata!");
+        }
+
+        private async Task HandleDisableEleAsync(JsonNode notification, TwitchManagerDbContext twitchManagerDbContext)
+        {
+            var isBroadcaster = IsBroadcaster(notification);
+            var isModerator = IsModerator(notification);
+            var broadcasterId = GetBroadcasterId(notification);
+            var userId = GetUserId(notification);
+            var chatterUsername = GetChatterUsername(notification);
+
+            if (!isBroadcaster && !isModerator)
+            {
+                await SendMessageInChatAsync(broadcasterId, userId, $"@{chatterUsername} ti piacerebbe! Kappa");
+                return;
+            }
+
+            var eleEnabled = await twitchManagerDbContext.LiveDataOptions
+                .Where(e => e.StreamerId == broadcasterId && e.Key == "IsEleEnabled")
+                .FirstOrDefaultAsync();
+
+            if (eleEnabled == null)
+            {
+                eleEnabled = new LiveDataOption
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    StreamerId = broadcasterId,
+                    CreatedOn = DateTime.UtcNow,
+                    UpdatedOn = DateTime.UtcNow,
+                    Key = "IsEleEnabled",
+                    Value = "false"
+                };
+            }
+            else
+            {
+                eleEnabled.Value = "false";
+                eleEnabled.UpdatedOn = DateTime.UtcNow;
+            }
+
+            await twitchManagerDbContext.SaveChangesAsync();
+
+            await SendMessageInChatAsync(broadcasterId, userId, $"@{chatterUsername} Ele è stata disattivata!");
         }
 
         private async Task HandleAddOnQueueAsync(JsonNode notification, TwitchManagerDbContext twitchManagerDbContext)

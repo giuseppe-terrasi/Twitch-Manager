@@ -135,15 +135,16 @@ namespace TwitchManager.Controllers
             using var dbcontext = await dbContextFactory.CreateDbContextAsync();
 
             var result = await authenticationService.AuthenticateAsync(HttpContext, TwitchManagerAuthenticationOptions.BotAuthenticationScheme);
+            var twitchId = User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).FirstOrDefault();
 
-            var botUser = await dbcontext.BotUsers.Where(u => u.TwitchId == User.Identity.Name).FirstOrDefaultAsync();
+            var botUser = await dbcontext.BotUsers.Where(u => u.TwitchId == twitchId).FirstOrDefaultAsync();
 
             if (botUser == null)
             {
                 botUser = new BotUser
                 {
                     Id = Guid.NewGuid().ToString(),
-                    TwitchId = User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).Select(c => c.Value).FirstOrDefault(),
+                    TwitchId = twitchId,
                     CreatedOn = DateTime.UtcNow,
                 };
                 dbcontext.BotUsers.Add(botUser);
@@ -153,6 +154,8 @@ namespace TwitchManager.Controllers
             botUser.RefreshToken = result.Properties.GetTokenValue("refresh_token");
             botUser.ExpirationDate = DateTime.Parse(result.Properties.GetTokenValue("expires_at"));
             botUser.IdToken = result.Properties.GetTokenValue("id_token");
+            botUser.TwitchUsername = User.Claims.Where(c => c.Type == "preferred_username").Select(c => c.Value).FirstOrDefault();
+            botUser.UpdatedOn = DateTime.UtcNow;
 
             await dbcontext.SaveChangesAsync();
 

@@ -60,5 +60,12 @@
 	  <ProjectReference Include="..\FFMEPGWrapper\FFMEPGWrapper.csproj" />
 	</ItemGroup>
 
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Translations\Translation.resx">
+	    <Generator></Generator>
+	  </EmbeddedResource>
+	</ItemGroup>
+
 	
 </Project>

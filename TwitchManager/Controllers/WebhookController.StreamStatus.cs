@@ -64,9 +64,11 @@ namespace TwitchManager.Controllers
                 return Ok($"Utente {userId}: Non hai i permessi per invocare questa azione");
             }
 
-            var result = await HandleStreamOnlineNotification(hostStreamerId);
+            return Ok("TEST OK");
 
-            return Ok(result);
+            /*var result = await HandleStreamOnlineNotification(hostStreamerId);
+
+            return Ok(result);*/
         }
 
         private async Task HandleStreamOnlineNotification(JsonNode notification)

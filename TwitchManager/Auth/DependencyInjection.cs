@@ -52,6 +52,14 @@ namespace TwitchManager.Auth
                 options.GetClaimsFromUserInfoEndpoint = true;
                 options.SaveTokens = true;
                 options.ResponseType = "code";
+
+                options.Events.OnRedirectToIdentityProvider = async context =>
+                {
+                    if (!context.ProtocolMessage.RedirectUri.StartsWith("https"))
+                    {
+                        context.ProtocolMessage.RedirectUri = context.ProtocolMessage.RedirectUri.Replace("http://", "https://");
+                    }
+                };
             });
 
             services.AddAuthorizationBuilder()

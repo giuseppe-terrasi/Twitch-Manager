@@ -14,6 +14,8 @@ namespace TwitchManager.Models.Api.Events
 
         public string StreamerId { get; set; }
 
+        public string StreamerName { get; set; }
+
         public string Method { get; set; }
 
         public string Callback { get; set; }
@@ -21,6 +23,10 @@ namespace TwitchManager.Models.Api.Events
         public string Secret { get; set; }
 
         public string Condition { get; set; }
+
+        public string BotUserId { get; set; }
+
+        public string BotUsername { get; set; }
 
         public EventSubStatus Status { get; set; }
     }

@@ -18,7 +18,7 @@
 @rendermode InteractiveServerNotPrerendered
 
 <div class="random-clip-container">
-    <video autoplay class="clip-iframe" src="@clip?.DownloadLink" @onended="async () => await StartClipAsync()" id="clip-video">
+    <video autoplay class="clip-iframe" src="@clip?.DownloadLink" @onended="async () => await OnClipEndedAsync()" id="clip-video">
     </video>
 
     @if(clip != null)
@@ -37,6 +37,13 @@
         </div>
     }
 
+    @if(onlyDownloaded.HasValue && onlyDownloaded.Value)
+    {
+        <div class="download-warning">
+            @Localizer["RandomClipsSafeWarning"]
+        </div>
+    }
+
 </div>
 
 
@@ -51,6 +58,8 @@
 
     Queue<Models.Clips.ClipModel> clips = new();
 
+    bool? onlyDownloaded = null;
+
     protected override async Task OnInitializedAsync()
     {
         await SetLoadingAsync(true, "bg-black");
@@ -60,20 +69,33 @@
 
     private async Task LoadClipsAsync()
     {
-
-        var result = await ClipService.GetByStreamerAsync(new Models.Clips.ClipFilterModel() { StreamerId = StreamerId, Skip = skip, Take = 5, IsRandom = true });
+        var restart = false;
+        var result = await ClipService.GetByStreamerAsync(new Models.Clips.ClipFilterModel() { StreamerId = StreamerId, Skip = skip, Take = 5, IsRandom = true, IsDownloaded = onlyDownloaded });
         foreach(var clip in result.Clips)
         {
             try
             {
-                clip.DownloadLink = await ClipService.GetDownloadLinkAsync(clip.Id, CancellationToken.None);
+                clip.DownloadLink = await ClipService.GetDownloadLinkAsync(clip, CancellationToken.None);
                 clips.Enqueue(clip);
+            }
+            catch(BadHttpRequestException ex)
+            {
+                Logger.LogWarning(ex, "Bad HTTP Request while loading clip url. Switching to downloaded");
+                clips.Clear();
+                onlyDownloaded = true;
+                restart = true;
+                break;
             }
             catch(Exception ex)
             {
                 Logger.LogError(ex, "Error loading clip url");
             }
         };
+
+        if(restart)
+        {
+            await LoadClipsAsync();
+        }
     }
 
     private async Task StartClipAsync()
@@ -98,6 +120,23 @@
         else
         {
             await ClipHub.Clients.All.SendAsync("Hide");
+        }
+    }
+
+    private async Task OnClipEndedAsync()
+    {
+        if(onlyDownloaded == true)
+        {
+            clip.DownloadLink = null;
+            await InvokeAsync(StateHasChanged);
+
+            await Task.Delay(1000); // Small delay to have a nice transition between clips
+
+            await StartClipAsync();
+        }
+        else
+        {
+            await StartClipAsync();
         }
     }
 }
